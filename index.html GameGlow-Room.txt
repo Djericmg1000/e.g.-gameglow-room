@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GameGlow-Room - Automatic Live Sports Light Sync</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { background-color: #0b0f19; color: #f8fafc; font-family: system-ui, sans-serif; transition: background-color 0.3s ease; }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+  <!-- Header -->
+  <header class="border-b border-slate-800 bg-slate-900/90 p-4 sticky top-0 z-50">
+    <div class="max-w-5xl mx-auto flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <!-- Logo SVG -->
+        <svg class="h-8 w-auto" viewBox="0 0 800 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="800" height="200" rx="30" fill="#0D1527"/>
+          <circle cx="125" cy="100" r="60" stroke="#00B2FF" stroke-width="16"/>
+          <path d="M110 70 H155 V90 H130 V110 H150 V130 H110 Z" fill="white"/>
+          <circle cx="180" cy="55" r="16" fill="#FFC845"/>
+        </svg>
+        <span class="text-xl font-bold tracking-tight bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
+          GameGlow-Room
+        </span>
+      </div>
+      <div class="flex items-center space-x-3">
+        <div class="flex items-center space-x-2 text-xs font-mono text-emerald-400">
+          <span class="h-2.5 w-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span id="pollingStatus">Auto-Polling Active</span>
+        </div>
+        <button id="ttsBtn" onclick="toggleTTS()" class="text-xs font-semibold px-3 py-1.5 rounded-full bg-emerald-950/50 border border-emerald-500/50 text-emerald-300">
+          🔊 Voice Alerts ON
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="flex-1 max-w-5xl w-full mx-auto p-6 space-y-6">
+
+    <!-- Live Sports Feed Configuration -->
+    <section class="bg-slate-900 border border-slate-800 rounded-xl p-6">
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+        <div>
+          <h2 class="text-lg font-semibold text-slate-100">Live Sports Automatic Tracker</h2>
+          <p class="text-sm text-slate-400">Select a league to poll real live score updates every 10 seconds.</p>
+        </div>
+        <div class="flex items-center space-x-2">
+          <label class="text-xs text-slate-400">League:</label>
+          <select id="leagueSelect" onchange="fetchLiveScores()" class="bg-slate-950 border border-slate-700 text-cyan-400 font-semibold text-sm rounded px-3 py-1.5 focus:outline-none">
+            <option value="football/nfl">NFL</option>
+            <option value="basketball/nba">NBA</option>
+            <option value="baseball/mlb">MLB</option>
+            <option value="hockey/nhl">NHL</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Games List -->
+      <div id="gamesContainer" class="space-y-3">
+        <div class="text-center py-8 text-sm text-slate-500">Loading live scoreboard data...</div>
+      </div>
+    </section>
+
+    <!-- Universal Smart Lights Configuration Grid -->
+    <section class="bg-slate-900 border border-slate-800 rounded-xl p-6">
+      <h2 class="text-lg font-semibold text-slate-100 mb-1">Universal Smart Light Hardware</h2>
+      <p class="text-sm text-slate-400 mb-4">Connected devices auto-flash when any team scores in your tracked games.</p>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        
+        <!-- 1. Govee API -->
+        <div class="p-4 rounded-lg bg-slate-950 border border-slate-800 space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-semibold text-cyan-400 uppercase tracking-wider">Govee Cloud</span>
+            <input type="checkbox" id="goveeActive" checked class="h-4 w-4 accent-cyan-500">
+          </div>
+          <input type="password" id="goveeApiKey" placeholder="Govee API Key" class="w-full bg-slate-900 border border-slate-700 rounded px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-cyan-500">
+          <input type="text" id="goveeMac" placeholder="Device MAC (XX:XX:...)" class="w-full bg-slate-900 border border-slate-700 rounded px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-cyan-500">
+          <input type="text" id="goveeModel" placeholder="Model (e.g. H6159)" class="w-full bg-slate-900 border border-slate-700 rounded px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-cyan-500">
+        </div>
+
+        <!-- 2. Nanoleaf Local API -->
+        <div class="p-4 rounded-lg bg-slate-950 border border-slate-800 space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-semibold text-cyan-400 uppercase tracking-wider">Nanoleaf Panels</span>
+            <input type="checkbox" id="nanoleafActive" checked class="h-4 w-4 accent-cyan-500">
+          </div>
+          <input type="text" id="nanoleafIp" placeholder="Nanoleaf IP (192.168.1.X)" class="w-full bg-slate-900 border border-slate-700 rounded px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-cyan-500">
+          <input type="password" id="nanoleafAuthToken" placeholder="Auth Token Key" class="w-full bg-slate-900 border border-slate-700 rounded px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-cyan-500">
+        </div>
+
+        <!-- 3. LIFX Cloud API -->
+        <div class="p-4 rounded-lg bg-slate-950 border border-slate-800 space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-semibold text-cyan-400 uppercase tracking-wider">LIFX Cloud</span>
+            <input type="checkbox" id="lifxActive" checked class="h-4 w-4 accent-cyan-500">
+          </div>
+          <input type="password" id="lifxToken" placeholder="LIFX OAuth Token" class="w-full bg-slate-900 border border-slate-700 rounded px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-cyan-500">
+          <input type="text" id="lifxSelector" placeholder="Selector (e.g. all or group:room)" class="w-full bg-slate-900 border border-slate-700 rounded px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-cyan-500">
+        </div>
+
+        <!-- 4. WLED Local -->
+        <div class="p-4 rounded-lg bg-slate-950 border border-slate-800 space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-semibold text-cyan-400 uppercase tracking-wider">WLED Strip</span>
+            <input type="checkbox" id="wledActive" checked class="h-4 w-4 accent-cyan-500">
+          </div>
+          <input type="text" id="wledIp" placeholder="WLED IP (192.168.1.X)" class="w-full bg-slate-900 border border-slate-700 rounded px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-cyan-500">
+        </div>
+
+        <!-- 5. Philips Hue Bridge -->
+        <div class="p-4 rounded-lg bg-slate-950 border border-slate-800 space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-semibold text-cyan-400 uppercase tracking-wider">Philips Hue</span>
+            <input type="checkbox" id="hueActive" checked class="h-4 w-4 accent-cyan-500">
+          </div>
+          <input type="text" id="hueIp" placeholder="Bridge IP (192.168.1.X)" class="w-full bg-slate-900 border border-slate-700 rounded px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-cyan-500">
+          <input type="password" id="hueUser" placeholder="Hue API Username Key" class="w-full bg-slate-900 border border-slate-700 rounded px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-cyan-500">
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Manual Simulation Override -->
+    <section class="bg-slate-900 border border-slate-800 rounded-xl p-6 text-center">
+      <h3 class="text-sm font-semibold text-slate-300 mb-2">Test Manual Score Event</h3>
+      <button onclick="triggerScoreEvent('Simulated Team', '#004C54')" class="bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-2.5 px-6 rounded-lg transition-colors">
+        🏈 Test Manual Score / Flash Hardware
+      </button>
+    </section>
+
+  </main>
+
+  <script>
+    let ttsActive = true;
+    let knownScores = {}; // Tracks game state: { gameId: { homeScore: X, awayScore: Y } }
+    let isInitialLoad = true;
+
+    function toggleTTS() {
+      ttsActive = !ttsActive;
+      const btn = document.getElementById('ttsBtn');
+      btn.innerText = ttsActive ? '🔊 Voice Alerts ON' : '🔇 Voice Alerts OFF';
+      btn.className = ttsActive 
+        ? 'text-xs font-semibold px-3 py-1.5 rounded-full bg-emerald-950/50 border border-emerald-500/50 text-emerald-300'
+        : 'text-xs font-semibold px-3 py-1.5 rounded-full bg-slate-800 border border-slate-700 text-slate-400';
+    }
+
+    // -------------------------------------------------------------
+    // LIVE SCORE AUTO-POLLING (ESPN API)
+    // -------------------------------------------------------------
+    async function fetchLiveScores() {
+      const league = document.getElementById('leagueSelect').value;
+      const url = `https://site.api.espn.com/apis/site/v2/sports/${league}/scoreboard`;
+
+      try {
+        const response = await fetch(url);
+        const data = await response.json();
+        renderGames(data.events || []);
+      } catch (err) {
+        console.warn('Live score fetch failed:', err);
+        document.getElementById('gamesContainer').innerHTML = 
+          `<div class="text-center py-6 text-sm text-red-400">Failed to load live sports feed. Retrying shortly...</div>`;
+      }
+    }
+
+    function renderGames(events) {
+      const container = document.getElementById('gamesContainer');
+      if (!events || events.length === 0) {
+        container.innerHTML = `<div class="text-center py-6 text-sm text-slate-500">No scheduled games found for this league today.</div>`;
+        return;
+      }
+
+      container.innerHTML = '';
+
+      events.forEach(event => {
+        const gameId = event.id;
+        const competition = event.competitions[0];
+        const home = competition.competitors.find(c => c.homeAway === 'home');
+        const away = competition.competitors.find(c => c.awayAway === 'away');
+
+        const homeScore = parseInt(home.score || '0');
+        const awayScore = parseInt(away.score || '0');
+        const homeColor = '#' + (home.team.color || '00B2FF');
+        const awayColor = '#' + (away.team.color || 'FFC845');
+
+        // Check for score increases after initial baseline load
+        if (!isInitialLoad && knownScores[gameId]) {
+          if (homeScore > knownScores[gameId].home) {
+            triggerScoreEvent(home.team.displayName, homeColor);
+          } else if (awayScore > knownScores[gameId].away) {
+            triggerScoreEvent(away.team.displayName, awayColor);
+          }
+        }
+
+        // Store current scores
+        knownScores[gameId] = { home: homeScore, away: awayScore };
+
+        const statusText = event.status.type.shortDetail || 'Scheduled';
+        const isLive = event.status.type.state === 'in';
+
+        // Render game item card
+        const card = document.createElement('div');
+        card.className = "p-4 rounded-lg bg-slate-950/70 border border-slate-800 flex items-center justify-between";
+        card.innerHTML = `
+          <div class="flex items-center space-x-3 w-2/5">
+            <span class="h-4 w-4 rounded-full flex-shrink-0" style="background-color: ${awayColor}"></span>
+            <span class="font-semibold text-slate-200 truncate">${away.team.shortDisplayName}</span>
+            <span class="text-lg font-bold text-slate-100 ml-auto">${awayScore}</span>
+          </div>
+          <div class="text-center px-2">
+            <span class="text-[10px] font-mono uppercase px-2 py-0.5 rounded bg-slate-800 text-slate-400">${event.status.type.name}</span>
+            <div class="text-xs ${isLive ? 'text-cyan-400 font-semibold' : 'text-slate-500'} mt-1">${statusText}</div>
+          </div>
+          <div class="flex items-center space-x-3 w-2/5 justify-end">
+            <span class="text-lg font-bold text-slate-100 mr-auto">${homeScore}</span>
+            <span class="font-semibold text-slate-200 truncate">${home.team.shortDisplayName}</span>
+            <span class="h-4 w-4 rounded-full flex-shrink-0" style="background-color: ${homeColor}"></span>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+
+      isInitialLoad = false;
+    }
+
+    // -------------------------------------------------------------
+    // SMART LIGHT API TRIGGERS
+    // -------------------------------------------------------------
+    async function sendGoveeTrigger(key, mac, model) {
+      if (!key || !mac || !model) return;
+      try {
+        await fetch('https://developer-api.govee.com/v1/devices/control', {
+          method: 'PUT',
+          headers: { 'Govee-API-Key': key, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ device: mac, model: model, cmd: { name: "color", value: { r: 0, g: 178, b: 255 } } })
+        });
+      } catch (e) { console.warn('Govee API failed:', e); }
+    }
+
+    async function sendNanoleafTrigger(ip, token) {
+      if (!ip || !token) return;
+      try {
+        await fetch(`http://${ip}:16021/api/v1/${token}/state`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ hue: { value: 180 }, sat: { value: 100 }, brightness: { value: 100 } })
+        });
+      } catch (e) { console.warn('Nanoleaf API failed:', e); }
+    }
+
+    async function sendLifxTrigger(token, selector) {
+      if (!token) return;
+      try {
+        await fetch(`https://api.lifx.com/v1/lights/${selector || 'all'}/effects/pulse`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ color: 'cyan', cycles: 5, period: 0.5, power_on: true })
+        });
+      } catch (e) { console.warn('LIFX API failed:', e); }
+    }
+
+    async function sendWledTrigger(ip) {
+      if (!ip) return;
+      try {
+        await fetch(`http://${ip}/json/state`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ on: true, bri: 255, seg: [{ col: [[0, 178, 255]], fx: 9 }] })
+        });
+      } catch (e) { console.warn('WLED API failed:', e); }
+    }
+
+    async function sendHueTrigger(ip, user) {
+      if (!ip || !user) return;
+      try {
+        await fetch(`http://${ip}/api/${user}/lights/1/state`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ on: true, bri: 254, hue: 35000, sat: 254, alert: 'lselect' })
+        });
+      } catch (e) { console.warn('Hue API failed:', e); }
+    }
+
+    function triggerScoreEvent(teamName, teamColor) {
+      // Voice alert
+      if (ttsActive && 'speechSynthesis' in window) {
+        const msg = new SpeechSynthesisUtterance(`Score alert! ${teamName} just scored!`);
+        window.speechSynthesis.speak(msg);
+      }
+
+      // Flash background UI with team color
+      document.body.style.backgroundColor = teamColor || '#004C54';
+      setTimeout(() => { document.body.style.backgroundColor = '#0b0f19'; }, 1500);
+
+      // Flash Govee
+      if (document.getElementById('goveeActive').checked) {
+        sendGoveeTrigger(
+          document.getElementById('goveeApiKey').value,
+          document.getElementById('goveeMac').value,
+          document.getElementById('goveeModel').value
+        );
+      }
+
+      // Flash Nanoleaf
+      if (document.getElementById('nanoleafActive').checked) {
+        sendNanoleafTrigger(
+          document.getElementById('nanoleafIp').value,
+          document.getElementById('nanoleafAuthToken').value
+        );
+      }
+
+      // Flash LIFX
+      if (document.getElementById('lifxActive').checked) {
+        sendLifxTrigger(
+          document.getElementById('lifxToken').value,
+          document.getElementById('lifxSelector').value
+        );
+      }
+
+      // Flash WLED
+      if (document.getElementById('wledActive').checked) {
+        sendWledTrigger(document.getElementById('wledIp').value);
+      }
+
+      // Flash Philips Hue
+      if (document.getElementById('hueActive').checked) {
+        sendHueTrigger(
+          document.getElementById('hueIp').value,
+          document.getElementById('hueUser').value
+        );
+      }
+    }
+
+    // Initialize initial poll and repeat every 10 seconds
+    fetchLiveScores();
+    setInterval(fetchLiveScores, 10000);
+  </script>
+</body>
+</html>
