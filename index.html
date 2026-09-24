@@ -1,0 +1,1525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GameGlow Room Pro Max Studio</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Three.js for 3D Studio Canvas -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <!-- OrbitControls for Three.js -->
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+
+  <script>
+    /* ConnectedRoom design tokens: the neutral ramp is inverted (light surfaces,
+       dark type) and every accent is remapped onto the ConnectedRoom palette. */
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            cyber: {
+              black: '#F7F6FF',
+              card: '#FFFFFF',
+              border: '#EAE9F5',
+              accent: '#007fff',
+              stage: '#15151D'
+            },
+            slate: {
+              50: '#15151D',
+              100: '#1c1c25',
+              200: '#25252F',
+              300: '#3E3D49',
+              400: '#8B8A99',
+              500: '#A5A4B2',
+              600: '#B0AFBE',
+              700: '#DEDDEB',
+              800: '#EAE9F5',
+              900: '#F7F6FF',
+              950: '#FFFFFF'
+            },
+            indigo: {
+              300: '#0066cc',
+              400: '#007fff',
+              500: '#007fff',
+              600: '#007fff',
+              900: '#cce5ff',
+              950: '#E6F2FF'
+            },
+            cyan: {
+              300: '#0b7fad',
+              400: '#0e9ed6',
+              500: '#1bb3f7',
+              600: '#0e9ed6',
+              900: '#a4e1fc',
+              950: '#d1f0fd'
+            },
+            emerald: {
+              300: '#1f8a4d',
+              400: '#22a85f',
+              500: '#5BDF91',
+              600: '#2fb86a',
+              900: '#bdf2d3',
+              950: '#e8fbf0'
+            },
+            green: { 400: '#22a85f', 500: '#5BDF91' },
+            lime: { 500: '#8fd94f' },
+            rose: {
+              300: '#c9364c',
+              400: '#e0475f',
+              500: '#F96D80',
+              600: '#e0475f',
+              900: '#fdc5cc',
+              950: '#fee2e6'
+            },
+            pink: {
+              300: '#c9364c',
+              400: '#e0475f',
+              500: '#F96D80',
+              600: '#e0475f',
+              900: '#fdc5cc',
+              950: '#fee2e6'
+            },
+            purple: {
+              300: '#4b36c9',
+              400: '#5a43d8',
+              500: '#644EF3',
+              600: '#5a43d8',
+              900: '#ddd8fd',
+              950: '#eeebff'
+            },
+            amber: {
+              300: '#a86b00',
+              400: '#d98a00',
+              500: '#FFB546',
+              600: '#e09400',
+              900: '#fde8c2',
+              950: '#fff4e0'
+            }
+          },
+          fontFamily: {
+            sans: ['Poppins', 'system-ui', 'sans-serif'],
+            mono: ['"Space Mono"', 'monospace']
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap');
+
+    body {
+      font-family: 'Poppins', system-ui, sans-serif;
+      background-color: #F7F6FF;
+      color: #25252F;
+      overflow-x: hidden;
+    }
+
+    /* Custom Scrollbars */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #F7F6FF;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #DEDDEB;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #007fff;
+    }
+
+    .ambient-glow {
+      transition: box-shadow 0.3s ease, border-color 0.3s ease, background 0.3s ease;
+    }
+
+    .glass-panel {
+      background: #ffffff;
+      border: 1px solid #EAE9F5;
+      box-shadow: 0 2px 12px rgba(21, 21, 29, 0.04);
+    }
+
+    /* Dark stage used for the 3D / 2D room renders */
+    .stage {
+      background: #15151D;
+    }
+    .stage-chip {
+      background: rgba(21, 21, 29, 0.72);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: #ffffff;
+    }
+
+    .neon-border-cyan {
+      box-shadow: 0 0 0 3px rgba(27, 179, 247, 0.18);
+      border-color: #1bb3f7;
+    }
+
+    .neon-border-pink {
+      box-shadow: 0 0 0 3px rgba(249, 109, 128, 0.18);
+      border-color: #F96D80;
+    }
+
+    /* ConnectedRoom pill buttons */
+    .cr-pill {
+      border-radius: 9999px;
+    }
+
+    /* Slider styling */
+    input[type="range"] {
+      accent-color: #007fff;
+    }
+  </style>
+</head>
+<body class="h-screen w-screen flex flex-col select-none overflow-hidden text-slate-200">
+
+  <header class="h-16 bg-white border-b border-cyber-border px-5 flex items-center justify-between z-30 shrink-0">
+    <div class="flex items-center space-x-3">
+      <div class="w-10 h-10 rounded-2xl bg-indigo-600 flex items-center justify-center">
+        <i class="fa-solid text-white text-lg fa-bolt"></i>
+      </div>
+      <div>
+        <h1 class="font-bold text-base tracking-tight text-slate-50">
+          GameGlow<span class="text-indigo-500">Room</span>
+          <span class="ml-1.5 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-indigo-950 text-indigo-300 align-middle">PRO MAX</span>
+        </h1>
+        <p class="text-[10px] text-slate-400 -mt-0.5">RGB studio lighting &amp; audio engine</p>
+      </div>
+    </div>
+
+    <!-- Central Mode Selector Tabs -->
+    <div class="hidden md:flex items-center bg-cyber-black p-1 rounded-full border border-cyber-border space-x-1">
+      <button onclick="setActiveTab('canvas')" id="tab-btn-canvas" class="tab-btn active px-3.5 py-1.5 rounded-full text-xs font-semibold flex items-center space-x-2 transition bg-indigo-600 text-white shadow-sm">
+        <i class="fa-solid fa-cube"></i><span>Studio Canvas</span>
+      </button>
+      <button onclick="setActiveTab('zones')" id="tab-btn-zones" class="tab-btn px-3.5 py-1.5 rounded-full text-xs font-semibold flex items-center space-x-2 text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 transition">
+        <i class="fa-solid fa-sliders"></i><span>Zone Effects</span>
+      </button>
+      <button onclick="setActiveTab('simulator')" id="tab-btn-simulator" class="tab-btn px-3.5 py-1.5 rounded-full text-xs font-semibold flex items-center space-x-2 text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 transition">
+        <i class="fa-solid fa-gamepad"></i><span>Game Sync</span>
+      </button>
+      <button onclick="setActiveTab('rules')" id="tab-btn-rules" class="tab-btn px-3.5 py-1.5 rounded-full text-xs font-semibold flex items-center space-x-2 text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 transition">
+        <i class="fa-solid fa-diagram-project"></i><span>Logic Rules</span>
+      </button>
+      <button onclick="setActiveTab('yaml')" id="tab-btn-yaml" class="tab-btn px-3.5 py-1.5 rounded-full text-xs font-semibold flex items-center space-x-2 text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 transition">
+        <i class="fa-solid fa-code"></i><span>YAML / OpenRGB</span>
+      </button>
+    </div>
+
+    <!-- Master Sync & Audio Controls -->
+    <div class="flex items-center space-x-3">
+      <!-- Master Audio Toggle -->
+      <button id="btn-audio-engine" onclick="toggleAudioEngine()" class="px-3.5 py-2 rounded-full border border-cyber-border bg-white hover:bg-slate-900 text-xs font-semibold flex items-center space-x-2 transition text-slate-300">
+        <i class="fa-solid fa-volume-xmark text-rose-400" id="audio-icon"></i>
+        <span id="audio-status-label">Audio Synth: OFF</span>
+      </button>
+
+      <!-- Master Power Toggle -->
+      <button id="btn-master-power" onclick="toggleMasterPower()" class="px-4 py-2 rounded-full bg-indigo-600 hover:bg-indigo-300 text-white text-xs font-semibold flex items-center space-x-2 transition">
+        <i class="fa-solid fa-power-off"></i>
+        <span id="master-power-label">POWER ON</span>
+      </button>
+    </div>
+  </header>
+
+  <main class="flex-1 flex overflow-hidden relative">
+
+    <!-- LEFT SIDEBAR: Quick Controls & Dynamic Preset Selector -->
+    <aside class="w-72 glass-panel border-r border-cyber-border p-4 flex flex-col justify-between shrink-0 hidden lg:flex z-20">
+      <div class="space-y-5 overflow-y-auto pr-1">
+
+        <!-- Master Brightness & Speed -->
+        <div>
+          <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 flex items-center justify-between">
+            <span>Global Intensity</span>
+            <i class="fa-solid fa-sun text-indigo-400"></i>
+          </h2>
+          <div class="space-y-3 bg-cyber-black/50 p-3 rounded-xl border border-cyber-border">
+            <div>
+              <div class="flex justify-between text-xs mb-1">
+                <span class="text-slate-400">Master Brightness</span>
+                <span id="val-brightness" class="font-mono text-indigo-400 font-bold">85%</span>
+              </div>
+              <input type="range" id="slider-brightness" min="0" max="100" value="85" oninput="updateMasterBrightness(this.value)" class="w-full h-1.5 bg-slate-700 rounded-lg cursor-pointer">
+            </div>
+
+            <div>
+              <div class="flex justify-between text-xs mb-1">
+                <span class="text-slate-400">Effect Speed</span>
+                <span id="val-speed" class="font-mono text-indigo-400 font-bold">1.2x</span>
+              </div>
+              <input type="range" id="slider-speed" min="2" max="30" value="12" oninput="updateMasterSpeed(this.value)" class="w-full h-1.5 bg-slate-700 rounded-lg cursor-pointer">
+            </div>
+          </div>
+        </div>
+
+        <!-- Studio Lighting Presets -->
+        <div>
+          <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 flex items-center justify-between">
+            <span>Studio Lighting Presets</span>
+            <i class="fa-solid fa-wand-magic-sparkles text-pink-400"></i>
+          </h2>
+          <div class="grid grid-cols-2 gap-2">
+            <button onclick="applyPreset('cyberpunk')" class="p-2.5 rounded-xl border border-cyber-border bg-slate-900/60 hover:bg-slate-800 text-left transition group relative overflow-hidden">
+              <div class="absolute inset-0 bg-gradient-to-r from-cyan-500/10 to-pink-500/10 opacity-0 group-hover:opacity-100 transition"></div>
+              <div class="flex items-center space-x-2 mb-1">
+                <div class="w-2.5 h-2.5 rounded-full bg-cyan-400 shadow-sm shadow-cyan-400"></div>
+                <div class="w-2.5 h-2.5 rounded-full bg-pink-500 shadow-sm shadow-pink-500"></div>
+              </div>
+              <div class="text-xs font-semibold text-slate-200">Cyberpunk</div>
+              <div class="text-[10px] text-slate-400">Neon Pink & Cyan</div>
+            </button>
+
+            <button onclick="applyPreset('matrix')" class="p-2.5 rounded-xl border border-cyber-border bg-slate-900/60 hover:bg-slate-800 text-left transition group relative overflow-hidden">
+              <div class="absolute inset-0 bg-gradient-to-r from-emerald-500/10 to-green-500/10 opacity-0 group-hover:opacity-100 transition"></div>
+              <div class="flex items-center space-x-2 mb-1">
+                <div class="w-2.5 h-2.5 rounded-full bg-emerald-400 shadow-sm shadow-emerald-400"></div>
+                <div class="w-2.5 h-2.5 rounded-full bg-lime-500 shadow-sm shadow-lime-500"></div>
+              </div>
+              <div class="text-xs font-semibold text-slate-200">Matrix Rain</div>
+              <div class="text-[10px] text-slate-400">Digital Emerald</div>
+            </button>
+
+            <button onclick="applyPreset('sunset')" class="p-2.5 rounded-xl border border-cyber-border bg-slate-900/60 hover:bg-slate-800 text-left transition group relative overflow-hidden">
+              <div class="absolute inset-0 bg-gradient-to-r from-amber-500/10 to-rose-500/10 opacity-0 group-hover:opacity-100 transition"></div>
+              <div class="flex items-center space-x-2 mb-1">
+                <div class="w-2.5 h-2.5 rounded-full bg-amber-400 shadow-sm shadow-amber-400"></div>
+                <div class="w-2.5 h-2.5 rounded-full bg-rose-500 shadow-sm shadow-rose-500"></div>
+              </div>
+              <div class="text-xs font-semibold text-slate-200">Neon Sunset</div>
+              <div class="text-[10px] text-slate-400">Warm Amber/Rose</div>
+            </button>
+
+            <button onclick="applyPreset('deepspace')" class="p-2.5 rounded-xl border border-cyber-border bg-slate-900/60 hover:bg-slate-800 text-left transition group relative overflow-hidden">
+              <div class="absolute inset-0 bg-gradient-to-r from-indigo-500/10 to-purple-500/10 opacity-0 group-hover:opacity-100 transition"></div>
+              <div class="flex items-center space-x-2 mb-1">
+                <div class="w-2.5 h-2.5 rounded-full bg-indigo-500 shadow-sm shadow-indigo-500"></div>
+                <div class="w-2.5 h-2.5 rounded-full bg-purple-500 shadow-sm shadow-purple-500"></div>
+              </div>
+              <div class="text-xs font-semibold text-slate-200">Deep Space</div>
+              <div class="text-[10px] text-slate-400">Cosmic Indigo</div>
+            </button>
+          </div>
+        </div>
+
+        <!-- Ambient Audio Visualizer Spectrum -->
+        <div>
+          <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center justify-between">
+            <span>Audio Visualizer</span>
+            <span id="spectrum-hz" class="text-[10px] font-mono text-cyan-400">60 FPS</span>
+          </h2>
+          <div class="bg-cyber-black p-2 rounded-xl border border-cyber-border relative overflow-hidden">
+            <canvas id="audio-spectrum-canvas" class="w-full h-24 rounded-lg bg-slate-950"></canvas>
+            <div id="audio-off-overlay" class="absolute inset-0 bg-slate-950/80 backdrop-blur-xs flex items-center justify-center flex-col text-center p-2">
+              <i class="fa-solid fa-microphone-slash text-slate-500 text-lg mb-1"></i>
+              <span class="text-[11px] text-slate-400 font-semibold">Audio Engine Muted</span>
+              <button onclick="toggleAudioEngine()" class="mt-2 px-3 py-1 rounded-full bg-indigo-600 hover:bg-indigo-300 text-[10px] font-semibold text-white transition">
+                Enable Synth
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Status Metrics -->
+        <div class="bg-indigo-950/30 rounded-xl p-3 border border-indigo-500/20 text-xs space-y-2">
+          <div class="flex justify-between items-center text-slate-300">
+            <span class="flex items-center space-x-1.5"><i class="fa-solid fa-network-wired text-indigo-400"></i><span>Active Devices</span></span>
+            <span class="font-mono font-bold text-indigo-300">6 Connected</span>
+          </div>
+          <div class="flex justify-between items-center text-slate-300">
+            <span class="flex items-center space-x-1.5"><i class="fa-solid fa-microchip text-emerald-400"></i><span>OpenRGB Bridge</span></span>
+            <span class="font-mono font-bold text-emerald-400">ACTIVE</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Footer Info -->
+      <div class="pt-3 border-t border-cyber-border text-center text-[11px] text-slate-500">
+        Studio Canvas Engine • WebGL 3D
+      </div>
+    </aside>
+
+    <!-- CENTER / MAIN CONTENT AREA -->
+    <section class="flex-1 flex flex-col overflow-hidden relative bg-cyber-black">
+
+
+      <div id="tab-canvas" class="tab-content flex-1 flex flex-col relative h-full p-4">
+        <!-- Canvas Toolbar -->
+        <div class="absolute top-7 left-7 right-7 z-10 flex justify-between items-center pointer-events-none">
+          <div class="pointer-events-auto stage-chip px-2 py-1.5 rounded-full flex items-center space-x-2 text-xs">
+            <button id="btn-view-3d" onclick="toggleCanvasView('3d')" class="px-3 py-1 rounded-full font-semibold bg-indigo-600 text-white transition">3D Room View</button>
+            <button id="btn-view-2d" onclick="toggleCanvasView('2d')" class="px-3 py-1 rounded-full font-semibold text-white/60 hover:text-white transition">2D Layout View</button>
+          </div>
+
+          <div class="pointer-events-auto stage-chip px-4 py-2 rounded-full flex items-center space-x-3 text-xs">
+            <label class="flex items-center space-x-2 cursor-pointer">
+              <input type="checkbox" id="chk-glow-propagation" checked onchange="toggleGlowPropagation(this.checked)" class="rounded text-indigo-600">
+              <span class="text-white/80 font-semibold">Wall Glow Propagation</span>
+            </label>
+            <span class="text-white/25">|</span>
+            <button onclick="resetCamera3D()" class="text-white/60 hover:text-white transition" title="Reset View">
+              <i class="fa-solid fa-arrows-rotate"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- 3D ThreeJS Render Container -->
+        <div id="canvas-container-3d" class="stage w-full h-full relative rounded-3xl overflow-hidden cursor-grab active:cursor-grabbing">
+          <!-- WebGL Canvas will be appended here -->
+        </div>
+
+        <!-- 2D Canvas View (Hidden by Default) -->
+        <div id="canvas-container-2d" class="stage w-full h-full relative hidden rounded-3xl flex items-center justify-center p-8">
+          <canvas id="layout-canvas-2d" class="w-full h-full rounded-2xl"></canvas>
+        </div>
+
+        <!-- Interactive Zone Hotspot Bar Overlay (Bottom of Canvas) -->
+        <div class="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 stage-chip px-4 py-2 rounded-full flex items-center space-x-2 overflow-x-auto max-w-[90vw]">
+          <span class="text-[10px] font-bold text-white/50 mr-2 uppercase tracking-wider">Select Zone:</span>
+
+          <button onclick="selectZone('zone-desk')" class="zone-selector-btn px-3 py-1.5 rounded-full border border-white/15 text-xs font-semibold flex items-center space-x-2 hover:bg-white/10 transition">
+            <div id="badge-color-desk" class="w-2.5 h-2.5 rounded-full bg-indigo-500"></div>
+            <span>Desk Lightbar</span>
+          </button>
+
+          <button onclick="selectZone('zone-wall')" class="zone-selector-btn px-3 py-1.5 rounded-full border border-white/15 text-xs font-semibold flex items-center space-x-2 hover:bg-white/10 transition">
+            <div id="badge-color-wall" class="w-2.5 h-2.5 rounded-full bg-pink-500"></div>
+            <span>Hex Wall Panels</span>
+          </button>
+
+          <button onclick="selectZone('zone-monitor')" class="zone-selector-btn px-3 py-1.5 rounded-full border border-white/15 text-xs font-semibold flex items-center space-x-2 hover:bg-white/10 transition">
+            <div id="badge-color-monitor" class="w-2.5 h-2.5 rounded-full bg-cyan-500"></div>
+            <span>Monitor Bias Light</span>
+          </button>
+
+          <button onclick="selectZone('zone-tower')" class="zone-selector-btn px-3 py-1.5 rounded-full border border-white/15 text-xs font-semibold flex items-center space-x-2 hover:bg-white/10 transition">
+            <div id="badge-color-tower" class="w-2.5 h-2.5 rounded-full bg-purple-500"></div>
+            <span>PC Tower ARGB</span>
+          </button>
+        </div>
+      </div>
+
+      <div id="tab-zones" class="tab-content flex-1 p-6 overflow-y-auto hidden">
+        <div class="max-w-5xl mx-auto space-y-6">
+          <div class="flex items-center justify-between border-b border-cyber-border pb-4">
+            <div>
+              <h2 class="text-xl font-bold text-slate-50 tracking-tight">Multi-Zone Lighting Controller</h2>
+              <p class="text-xs text-slate-400">Configure independent RGB colors, effects, and audio frequency reactivity for each studio fixture.</p>
+            </div>
+            <button onclick="syncAllZonesToPrimary()" class="px-4 py-2 rounded-full bg-indigo-600 hover:bg-indigo-300 text-xs font-semibold text-white transition flex items-center space-x-2">
+              <i class="fa-solid fa-arrows-to-circle"></i>
+              <span>Sync All Zones</span>
+            </button>
+          </div>
+
+          <!-- Zone Cards Grid -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-5" id="zone-cards-grid">
+            <!-- Zone Cards will be rendered dynamically by JavaScript -->
+          </div>
+        </div>
+      </div>
+
+      <div id="tab-simulator" class="tab-content flex-1 p-6 overflow-y-auto hidden">
+        <div class="max-w-4xl mx-auto space-y-6">
+          <div class="flex items-center justify-between border-b border-cyber-border pb-4">
+            <div>
+              <h2 class="text-xl font-bold text-slate-50 tracking-tight flex items-center space-x-2">
+                <i class="fa-solid fa-gamepad text-pink-500"></i>
+                <span>Live Game Match Sync Simulator</span>
+              </h2>
+              <p class="text-xs text-slate-400">Simulate real-time match events (Kills, Goals, Low Health, Victory Flash) with direct lighting feedback.</p>
+            </div>
+            <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 animate-pulse">
+              ● Match Telemetry Engine Ready
+            </span>
+          </div>
+
+          <!-- Game Selection & Interactive Scoreboard -->
+          <div class="glass-panel p-6 rounded-2xl border border-cyber-border space-y-6 relative overflow-hidden">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <div>
+                <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Active Game Profile</label>
+                <select id="sim-game-select" onchange="changeGameProfile(this.value)" class="bg-slate-900 border border-cyber-border rounded-xl px-3 py-2 text-sm font-semibold text-slate-200 focus:outline-none focus:border-indigo-500">
+                  <option value="fps">FPS Arena (Valorant / CS:2)</option>
+                  <option value="moba">MOBA Championship (League / Dota)</option>
+                  <option value="rocket">Rocket League / Arena Sports</option>
+                </select>
+              </div>
+
+              <!-- Live Score Controls -->
+              <div class="flex items-center space-x-6 bg-slate-950/80 p-3 rounded-xl border border-cyber-border">
+                <!-- Blue Team -->
+                <div class="text-center">
+                  <div class="text-[10px] font-bold text-cyan-400 uppercase">Blue Team</div>
+                  <div class="flex items-center space-x-2 mt-1">
+                    <button onclick="adjustScore('blue', -1)" class="w-6 h-6 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold">-</button>
+                    <span id="score-blue" class="font-mono text-xl font-bold text-slate-50 w-6 text-center">0</span>
+                    <button onclick="adjustScore('blue', 1)" class="w-6 h-6 rounded bg-cyan-600 hover:bg-cyan-500 text-white font-bold">+</button>
+                  </div>
+                </div>
+
+                <div class="font-bold text-slate-400 text-lg">VS</div>
+
+                <!-- Red Team -->
+                <div class="text-center">
+                  <div class="text-[10px] font-bold text-pink-400 uppercase">Red Team</div>
+                  <div class="flex items-center space-x-2 mt-1">
+                    <button onclick="adjustScore('red', -1)" class="w-6 h-6 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold">-</button>
+                    <span id="score-red" class="font-mono text-xl font-bold text-slate-50 w-6 text-center">0</span>
+                    <button onclick="adjustScore('red', 1)" class="w-6 h-6 rounded bg-pink-600 hover:bg-pink-500 text-white font-bold">+</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Interactive Trigger Event Buttons -->
+            <div>
+              <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Simulate In-Game Triggers</h3>
+              <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <button onclick="triggerGameEvent('kill')" class="p-4 rounded-xl border border-emerald-500/40 bg-emerald-950/30 hover:bg-emerald-900/50 text-left transition group">
+                  <i class="fa-solid fa-crosshairs text-emerald-400 text-xl mb-2 group-hover:scale-110 transition-transform"></i>
+                  <div class="text-xs font-bold text-slate-200">Enemy Eliminated</div>
+                  <div class="text-[10px] text-slate-400">Green Wave Pulse</div>
+                </button>
+
+                <button onclick="triggerGameEvent('low_health')" class="p-4 rounded-xl border border-rose-500/40 bg-rose-950/30 hover:bg-rose-900/50 text-left transition group">
+                  <i class="fa-solid fa-heart-pulse text-rose-500 text-xl mb-2 group-hover:scale-110 transition-transform animate-bounce"></i>
+                  <div class="text-xs font-bold text-slate-200">Critical Health</div>
+                  <div class="text-[10px] text-slate-400">Red Strobe Alarm</div>
+                </button>
+
+                <button onclick="triggerGameEvent('ultimate')" class="p-4 rounded-xl border border-purple-500/40 bg-purple-950/30 hover:bg-purple-900/50 text-left transition group">
+                  <i class="fa-solid fa-bolt-lightning text-purple-400 text-xl mb-2 group-hover:scale-110 transition-transform"></i>
+                  <div class="text-xs font-bold text-slate-200">Ultimate Ability</div>
+                  <div class="text-[10px] text-slate-400">Purple Energy Surge</div>
+                </button>
+
+                <button onclick="triggerGameEvent('victory')" class="p-4 rounded-xl border border-amber-500/40 bg-amber-950/30 hover:bg-amber-900/50 text-left transition group">
+                  <i class="fa-solid fa-trophy text-amber-400 text-xl mb-2 group-hover:scale-110 transition-transform"></i>
+                  <div class="text-xs font-bold text-slate-200">Match Victory</div>
+                  <div class="text-[10px] text-slate-400">Golden Celebration</div>
+                </button>
+              </div>
+            </div>
+
+            <!-- Match Event Log Feed -->
+            <div>
+              <div class="flex justify-between items-center mb-2">
+                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Live Telemetry Event Log</span>
+                <button onclick="clearEventLog()" class="text-[10px] text-slate-500 hover:text-slate-300">Clear Feed</button>
+              </div>
+              <div id="sim-event-log" class="h-36 bg-slate-950 rounded-xl p-3 border border-cyber-border font-mono text-xs overflow-y-auto space-y-1">
+                <div class="text-slate-500">[SYSTEM] Game Telemetry Receiver listening on port 8088...</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="tab-rules" class="tab-content flex-1 p-6 overflow-y-auto hidden">
+        <div class="max-w-4xl mx-auto space-y-6">
+          <div class="flex items-center justify-between border-b border-cyber-border pb-4">
+            <div>
+              <h2 class="text-xl font-bold text-slate-50 tracking-tight flex items-center space-x-2">
+                <i class="fa-solid fa-diagram-project text-cyan-400"></i>
+                <span>Smart Automation Logic Rules Engine</span>
+              </h2>
+              <p class="text-xs text-slate-400">Create IF/THEN rules to trigger dynamic studio lighting and audio based on system, game, or time events.</p>
+            </div>
+            <button onclick="addNewRuleModal()" class="px-4 py-2 rounded-full bg-indigo-600 hover:bg-indigo-300 text-xs font-semibold text-white transition flex items-center space-x-2">
+              <i class="fa-solid fa-plus"></i>
+              <span>Add Custom Rule</span>
+            </button>
+          </div>
+
+          <!-- Active Rules List Container -->
+          <div id="rules-container" class="space-y-3">
+            <!-- Dynamic Rule Cards will be injected here -->
+          </div>
+        </div>
+      </div>
+
+      <div id="tab-yaml" class="tab-content flex-1 p-6 overflow-y-auto hidden">
+        <div class="max-w-5xl mx-auto space-y-6">
+          <div class="flex items-center justify-between border-b border-cyber-border pb-4">
+            <div>
+              <h2 class="text-xl font-bold text-slate-50 tracking-tight flex items-center space-x-2">
+                <i class="fa-solid fa-code text-emerald-400"></i>
+                <span>Home Assistant YAML & OpenRGB Config Editor</span>
+              </h2>
+              <p class="text-xs text-slate-400">Generate real-time Home Assistant automation code or OpenRGB profile definitions directly from your studio layout.</p>
+            </div>
+            <div class="flex items-center space-x-2">
+              <button onclick="copyYamlToClipboard()" class="px-4 py-2 rounded-full bg-white hover:bg-slate-900 border border-cyber-border text-xs font-semibold text-slate-200 transition flex items-center space-x-1.5">
+                <i class="fa-solid fa-copy"></i>
+                <span>Copy YAML</span>
+              </button>
+              <button onclick="downloadYamlConfig()" class="px-4 py-2 rounded-full bg-indigo-600 hover:bg-indigo-300 text-xs font-semibold text-white transition flex items-center space-x-1.5">
+                <i class="fa-solid fa-download"></i>
+                <span>Export File</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Code Editor Box -->
+            <div class="lg:col-span-2 glass-panel p-4 rounded-2xl border border-cyber-border flex flex-col h-[500px]">
+              <div class="flex items-center justify-between mb-3 pb-2 border-b border-cyber-border">
+                <div class="flex items-center space-x-2">
+                  <div class="w-3 h-3 rounded-full bg-rose-500"></div>
+                  <div class="w-3 h-3 rounded-full bg-amber-500"></div>
+                  <div class="w-3 h-3 rounded-full bg-emerald-500"></div>
+                  <span class="text-xs font-mono text-slate-400 ml-2">homeassistant_gameglow.yaml</span>
+                </div>
+                <span class="text-[10px] text-emerald-400 font-mono bg-emerald-950/60 border border-emerald-500/30 px-2 py-0.5 rounded">AUTO-GENERATED</span>
+              </div>
+              <textarea id="yaml-code-editor" class="w-full flex-1 bg-slate-950 font-mono text-xs text-emerald-400 p-4 rounded-xl border border-cyber-border focus:outline-none resize-none leading-relaxed" spellcheck="false"></textarea>
+            </div>
+
+            <!-- YAML Status & Bridge Diagnostics -->
+            <div class="space-y-4">
+              <div class="glass-panel p-4 rounded-2xl border border-cyber-border space-y-3">
+                <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center justify-between">
+                  <span>OpenRGB Server Bridge</span>
+                  <i class="fa-solid fa-plug text-emerald-400"></i>
+                </h3>
+
+                <div class="space-y-2 text-xs">
+                  <div class="flex justify-between items-center p-2 rounded-lg bg-slate-950 border border-cyber-border">
+                    <span class="text-slate-400">SDK Host Address</span>
+                    <span class="font-mono text-indigo-300">127.0.0.1:6742</span>
+                  </div>
+                  <div class="flex justify-between items-center p-2 rounded-lg bg-slate-950 border border-cyber-border">
+                    <span class="text-slate-400">Protocol Version</span>
+                    <span class="font-mono text-slate-300">v3.0 (Direct)</span>
+                  </div>
+                  <div class="flex justify-between items-center p-2 rounded-lg bg-slate-950 border border-cyber-border">
+                    <span class="text-slate-400">Sync Target</span>
+                    <span class="font-mono text-emerald-400">Connected (6)</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Integration Instructions -->
+              <div class="glass-panel p-4 rounded-2xl border border-cyber-border space-y-2">
+                <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Deployment Instructions</h3>
+                <ol class="text-xs text-slate-400 space-y-2 list-decimal list-inside leading-relaxed">
+                  <li>Copy the auto-generated YAML configuration code above.</li>
+                  <li>Paste into your Home Assistant <code class="text-indigo-300 font-mono">automations.yaml</code> file.</li>
+                  <li>Ensure the OpenRGB HA Integration or MQTT Broker is connected.</li>
+                  <li>Reload Home Assistant automations to activate instant room synchronization.</li>
+                </ol>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </section>
+  </main>
+
+  <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col space-y-2 pointer-events-none"></div>
+
+  <script>
+    /* ==========================================================================
+       1. GLOBAL STATE DEFINITIONS
+       ========================================================================== */
+    const state = {
+      masterPower: true,
+      masterBrightness: 85,
+      masterSpeed: 12,
+      audioEngineActive: false,
+      glowPropagation: true,
+      canvasMode: '3d', // '3d' or '2d'
+      activeTab: 'canvas',
+      scores: { blue: 0, red: 0 },
+      
+      // Multi-zone Light Configurations
+      zones: {
+        'zone-desk': {
+          id: 'zone-desk',
+          name: 'Desk Ambient Lightbar',
+          color: '#6366f1',
+          effect: 'pulse',
+          reactivity: 'bass',
+          brightness: 90
+        },
+        'zone-wall': {
+          id: 'zone-wall',
+          name: 'Hexagon Wall Panels',
+          color: '#ec4899',
+          effect: 'rainbow',
+          reactivity: 'mid',
+          brightness: 80
+        },
+        'zone-monitor': {
+          id: 'zone-monitor',
+          name: 'Monitor Bias Backlight',
+          color: '#06b6d4',
+          effect: 'static',
+          reactivity: 'treble',
+          brightness: 100
+        },
+        'zone-tower': {
+          id: 'zone-tower',
+          name: 'PC Tower ARGB Fans',
+          color: '#a855f7',
+          effect: 'strobe',
+          reactivity: 'bass',
+          brightness: 85
+        }
+      },
+
+      // Rule Logic Engine Data
+      rules: [
+        {
+          id: 'rule-1',
+          name: 'Low Health Emergency Strobe',
+          trigger: 'game_low_health',
+          action: 'flash_red',
+          enabled: true
+        },
+        {
+          id: 'rule-2',
+          name: 'Victory Celebration Flash',
+          trigger: 'game_victory',
+          action: 'gold_rainbow',
+          enabled: true
+        },
+        {
+          id: 'rule-3',
+          name: 'Night Mode Auto Dim',
+          trigger: 'audio_silence',
+          action: 'dim_50',
+          enabled: false
+        }
+      ]
+    };
+
+    /* ==========================================================================
+       2. THREE.JS 3D STUDIO CANVAS ENGINE
+       ========================================================================== */
+    let scene, camera, renderer, controls;
+    let deskMesh, wallMesh, monitorMesh, towerMesh;
+    let deskLight, wallLight, monitorLight, towerLight;
+    let roomWall;
+
+    function init3DStudio() {
+      const container = document.getElementById('canvas-container-3d');
+      if (!container) return;
+
+      // Create Scene, Camera & WebGL Renderer
+      scene = new THREE.Scene();
+      scene.background = new THREE.Color(0x15151D);
+      scene.fog = new THREE.FogExp2(0x15151D, 0.03);
+
+      camera = new THREE.PerspectiveCamera(50, container.clientWidth / container.clientHeight, 0.1, 100);
+      camera.position.set(0, 3.5, 6.5);
+
+      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      renderer.setSize(container.clientWidth, container.clientHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.shadowMap.enabled = true;
+      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+      container.appendChild(renderer.domElement);
+
+      // OrbitControls for interactive room viewing
+      controls = new THREE.OrbitControls(camera, renderer.domElement);
+      controls.enableDamping = true;
+      controls.dampingFactor = 0.05;
+      controls.maxPolarAngle = Math.PI / 2 - 0.05; // Prevents camera going below floor
+      controls.minDistance = 3;
+      controls.maxDistance = 12;
+
+      // Ambient Base Light
+      const ambientLight = new THREE.AmbientLight(0x1a2035, 0.6);
+      scene.add(ambientLight);
+
+      // Room Environment (Floor & Back Wall)
+      const floorGeo = new THREE.PlaneGeometry(12, 10);
+      const floorMat = new THREE.MeshStandardMaterial({ color: 0x111420, roughness: 0.4, metalness: 0.2 });
+      const floor = new THREE.Mesh(floorGeo, floorMat);
+      floor.rotation.x = -Math.PI / 2;
+      floor.receiveShadow = true;
+      scene.add(floor);
+
+      const wallGeo = new THREE.PlaneGeometry(12, 7);
+      const wallMat = new THREE.MeshStandardMaterial({ color: 0x161a29, roughness: 0.7 });
+      roomWall = new THREE.Mesh(wallGeo, wallMat);
+      roomWall.position.set(0, 3.5, -5);
+      roomWall.receiveShadow = true;
+      scene.add(roomWall);
+
+      // --- STUDIO FIXTURES ---
+
+      // 1. Desk Lightbar
+      const deskGeo = new THREE.BoxGeometry(4, 0.1, 1.8);
+      const deskMat = new THREE.MeshStandardMaterial({ color: 0x1e2438, roughness: 0.3 });
+      deskMesh = new THREE.Mesh(deskGeo, deskMat);
+      deskMesh.position.set(0, 1.4, -3.2);
+      deskMesh.castShadow = true;
+      deskMesh.receiveShadow = true;
+      scene.add(deskMesh);
+
+      deskLight = new THREE.PointLight(0x6366f1, 2, 6);
+      deskLight.position.set(0, 1.35, -3.2);
+      scene.add(deskLight);
+
+      // 2. Hexagon Wall Panels
+      const wallPanelGeo = new THREE.CylinderGeometry(1.2, 1.2, 0.1, 6);
+      const wallPanelMat = new THREE.MeshStandardMaterial({ color: 0xec4899, emissive: 0xec4899, emissiveIntensity: 0.8 });
+      wallMesh = new THREE.Mesh(wallPanelGeo, wallPanelMat);
+      wallMesh.rotation.x = Math.PI / 2;
+      wallMesh.position.set(0, 4.2, -4.9);
+      scene.add(wallMesh);
+
+      wallLight = new THREE.PointLight(0xec4899, 2.5, 8);
+      wallLight.position.set(0, 4.2, -4.5);
+      scene.add(wallLight);
+
+      // 3. Monitor Bias Backlight
+      const monGeo = new THREE.BoxGeometry(2.2, 1.2, 0.1);
+      const monMat = new THREE.MeshStandardMaterial({ color: 0x05070a, roughness: 0.1 });
+      monitorMesh = new THREE.Mesh(monGeo, monMat);
+      monitorMesh.position.set(0, 2.4, -3.8);
+      scene.add(monitorMesh);
+
+      monitorLight = new THREE.PointLight(0x06b6d4, 2, 5);
+      monitorLight.position.set(0, 2.4, -4.1);
+      scene.add(monitorLight);
+
+      // 4. PC Tower ARGB
+      const towerGeo = new THREE.BoxGeometry(0.8, 1.5, 1.2);
+      const towerMat = new THREE.MeshStandardMaterial({ color: 0x0d0f18, roughness: 0.2 });
+      towerMesh = new THREE.Mesh(towerGeo, towerMat);
+      towerMesh.position.set(1.5, 2.15, -3.2);
+      scene.add(towerMesh);
+
+      towerLight = new THREE.PointLight(0xa855f7, 2, 4);
+      towerLight.position.set(1.5, 2.15, -3.2);
+      scene.add(towerLight);
+
+      // Window Resize Listener
+      window.addEventListener('resize', onWindowResize3D);
+    }
+
+    function onWindowResize3D() {
+      const container = document.getElementById('canvas-container-3d');
+      if (!container || !renderer || !camera) return;
+      camera.aspect = container.clientWidth / container.clientHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(container.clientWidth, container.clientHeight);
+    }
+
+    function resetCamera3D() {
+      if (camera && controls) {
+        camera.position.set(0, 3.5, 6.5);
+        controls.target.set(0, 2, 0);
+        controls.update();
+      }
+    }
+
+    let animationFrameId;
+    function animate3D() {
+      animationFrameId = requestAnimationFrame(animate3D);
+
+      if (controls) controls.update();
+
+      const time = Date.now() * 0.001 * (state.masterSpeed / 10);
+      const audioIntensity = getAudioReactivityLevel();
+
+      // Update Fixture Colors & Dynamics if Master Power is On
+      if (state.masterPower) {
+        // Desk
+        updateFixtureDynamic('zone-desk', deskLight, deskMesh, time, audioIntensity.bass);
+        // Wall
+        updateFixtureDynamic('zone-wall', wallLight, wallMesh, time, audioIntensity.mid);
+        // Monitor
+        updateFixtureDynamic('zone-monitor', monitorLight, monitorMesh, time, audioIntensity.treble);
+        // Tower
+        updateFixtureDynamic('zone-tower', towerLight, towerMesh, time, audioIntensity.bass);
+      } else {
+        // Master Power OFF -> Dim all lights
+        [deskLight, wallLight, monitorLight, towerLight].forEach(l => { if (l) l.intensity = 0; });
+      }
+
+      if (renderer && scene && camera) {
+        renderer.render(scene, camera);
+      }
+    }
+
+    function updateFixtureDynamic(zoneKey, lightObj, meshObj, time, audioVal) {
+      if (!lightObj) return;
+      const zone = state.zones[zoneKey];
+      const baseColor = new THREE.Color(zone.color);
+      const masterScale = (state.masterBrightness / 100) * (zone.brightness / 100);
+
+      let calcIntensity = 2.0 * masterScale;
+
+      // Dynamic Effect Calculations
+      if (zone.effect === 'pulse') {
+        calcIntensity *= (0.5 + 0.5 * Math.sin(time * 3));
+      } else if (zone.effect === 'strobe') {
+        calcIntensity *= (Math.sin(time * 15) > 0 ? 1 : 0.1);
+      } else if (zone.effect === 'rainbow') {
+        const hue = (time * 0.2) % 1;
+        baseColor.setHSL(hue, 1, 0.5);
+      }
+
+      // Audio Frequency Boosting
+      if (state.audioEngineActive) {
+        calcIntensity += audioVal * 3.5 * masterScale;
+      }
+
+      lightObj.color = baseColor;
+      lightObj.intensity = calcIntensity;
+
+      if (meshObj && meshObj.material && meshObj.material.emissive) {
+        meshObj.material.emissive = baseColor;
+        meshObj.material.emissiveIntensity = calcIntensity * 0.4;
+      }
+    }
+
+    /* ==========================================================================
+       3. 2D CANVAS LAYOUT RENDERER
+       ========================================================================== */
+    let canvas2D, ctx2D;
+
+    function render2DStudio() {
+      canvas2D = document.getElementById('layout-canvas-2d');
+      if (!canvas2D) return;
+      ctx2D = canvas2D.getContext('2d');
+
+      // Resize canvas to parent bounding box
+      const rect = canvas2D.getBoundingClientRect();
+      canvas2D.width = rect.width;
+      canvas2D.height = rect.height;
+
+      const w = canvas2D.width;
+      const h = canvas2D.height;
+
+      // Clear
+      ctx2D.fillStyle = '#15151D';
+      ctx2D.fillRect(0, 0, w, h);
+
+      // Draw Grid Lines
+      ctx2D.strokeStyle = 'rgba(255, 255, 255, 0.04)';
+      ctx2D.lineWidth = 1;
+      const gridSize = 30;
+      for (let x = 0; x < w; x += gridSize) {
+        ctx2D.beginPath(); ctx2D.moveTo(x, 0); ctx2D.lineTo(x, h); ctx2D.stroke();
+      }
+      for (let y = 0; y < h; y += gridSize) {
+        ctx2D.beginPath(); ctx2D.moveTo(0, y); ctx2D.lineTo(w, y); ctx2D.stroke();
+      }
+
+      if (!state.masterPower) {
+        ctx2D.fillStyle = '#8B8A99';
+        ctx2D.font = '14px Poppins';
+        ctx2D.fillText('SYSTEM POWER OFF', w / 2 - 60, h / 2);
+        return;
+      }
+
+      // Render 2D Light Hotspot Nodes
+      const nodes = [
+        { key: 'zone-wall', name: 'Hex Wall Panels', x: w * 0.5, y: h * 0.25, r: 45 },
+        { key: 'zone-monitor', name: 'Monitor Light', x: w * 0.5, y: h * 0.5, r: 35 },
+        { key: 'zone-desk', name: 'Desk Lightbar', x: w * 0.5, y: h * 0.7, r: 50 },
+        { key: 'zone-tower', name: 'PC Tower ARGB', x: w * 0.72, y: h * 0.6, r: 30 }
+      ];
+
+      nodes.forEach(node => {
+        const zone = state.zones[node.key];
+        
+        // Ambient Glow Circle
+        const grad = ctx2D.createRadialGradient(node.x, node.y, 5, node.x, node.y, node.r * 2);
+        grad.addColorStop(0, zone.color);
+        grad.addColorStop(1, 'transparent');
+
+        ctx2D.fillStyle = grad;
+        ctx2D.beginPath();
+        ctx2D.arc(node.x, node.y, node.r * 2, 0, Math.PI * 2);
+        ctx2D.fill();
+
+        // Node Circle
+        ctx2D.fillStyle = zone.color;
+        ctx2D.beginPath();
+        ctx2D.arc(node.x, node.y, 14, 0, Math.PI * 2);
+        ctx2D.fill();
+        ctx2D.strokeStyle = '#ffffff';
+        ctx2D.lineWidth = 2;
+        ctx2D.stroke();
+
+        // Text Label
+        ctx2D.fillStyle = '#ffffff';
+        ctx2D.font = '11px Poppins';
+        ctx2D.textAlign = 'center';
+        ctx2D.fillText(node.name, node.x, node.y + 32);
+      });
+    }
+
+    /* ==========================================================================
+       4. REAL-TIME WEB AUDIO SYNTHESIZER & SPECTRUM VISUALIZER
+       ========================================================================== */
+    let audioCtx, analyser, dataArray;
+    let synthOscillator, synthGain;
+
+    function toggleAudioEngine() {
+      state.audioEngineActive = !state.audioEngineActive;
+
+      const overlay = document.getElementById('audio-off-overlay');
+      const icon = document.getElementById('audio-icon');
+      const label = document.getElementById('audio-status-label');
+
+      if (state.audioEngineActive) {
+        if (!audioCtx) initAudioSynth();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+
+        if (overlay) overlay.classList.add('hidden');
+        if (icon) icon.className = 'fa-solid fa-volume-high text-emerald-400 animate-pulse';
+        if (label) label.innerText = 'Audio Synth: LIVE';
+
+        showToast('Web Audio Synthesizer & Visualizer Enabled');
+      } else {
+        if (overlay) overlay.classList.remove('hidden');
+        if (icon) icon.className = 'fa-solid fa-volume-xmark text-rose-400';
+        if (label) label.innerText = 'Audio Synth: OFF';
+
+        showToast('Audio Engine Muted', 'info');
+      }
+    }
+
+    function initAudioSynth() {
+      try {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        analyser = audioCtx.createAnalyser();
+        analyser.fftSize = 64;
+
+        // Ambient Synth Sound Generator (Subtle Game Glow hum)
+        synthOscillator = audioCtx.createOscillator();
+        synthGain = audioCtx.createGain();
+
+        synthOscillator.type = 'sine';
+        synthOscillator.frequency.setValueAtTime(110, audioCtx.currentTime); // Low A2 note
+
+        synthGain.gain.setValueAtTime(0.05, audioCtx.currentTime);
+
+        synthOscillator.connect(synthGain);
+        synthGain.connect(analyser);
+        analyser.connect(audioCtx.destination);
+
+        synthOscillator.start();
+
+        dataArray = new Uint8Array(analyser.frequencyBinCount);
+        renderSpectrumCanvas();
+      } catch (err) {
+        console.error('Audio Context Error:', err);
+      }
+    }
+
+    function getAudioReactivityLevel() {
+      if (!state.audioEngineActive || !analyser || !dataArray) {
+        return { bass: 0, mid: 0, treble: 0 };
+      }
+
+      analyser.getByteFrequencyData(dataArray);
+
+      const bass = (dataArray[1] + dataArray[2] + dataArray[3]) / (3 * 255);
+      const mid = (dataArray[8] + dataArray[9] + dataArray[10]) / (3 * 255);
+      const treble = (dataArray[18] + dataArray[19] + dataArray[20]) / (3 * 255);
+
+      return { bass, mid, treble };
+    }
+
+    function renderSpectrumCanvas() {
+      requestAnimationFrame(renderSpectrumCanvas);
+      const canvas = document.getElementById('audio-spectrum-canvas');
+      if (!canvas || !analyser || !dataArray) return;
+
+      const ctx = canvas.getContext('2d');
+      const width = canvas.width;
+      const height = canvas.height;
+
+      analyser.getByteFrequencyData(dataArray);
+
+      ctx.clearRect(0, 0, width, height);
+
+      const barWidth = (width / dataArray.length) * 1.5;
+      let x = 0;
+
+      for (let i = 0; i < dataArray.length; i++) {
+        const barHeight = (dataArray[i] / 255) * height;
+
+        // Gradient color for spectrum bars
+        const grad = ctx.createLinearGradient(0, height, 0, 0);
+        grad.addColorStop(0, '#007fff');
+        grad.addColorStop(0.5, '#1bb3f7');
+        grad.addColorStop(1, '#644EF3');
+
+        ctx.fillStyle = grad;
+        ctx.fillRect(x, height - barHeight, barWidth - 2, barHeight);
+
+        x += barWidth;
+      }
+    }
+
+    /* ==========================================================================
+       5. UI TABS & ZONE CONTROLLER RENDERING
+       ========================================================================== */
+    function setActiveTab(tabId) {
+      state.activeTab = tabId;
+
+      // Update Navigation Buttons
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('bg-indigo-600', 'text-white', 'shadow-sm');
+        btn.classList.add('text-slate-400');
+      });
+
+      const activeBtn = document.getElementById(`tab-btn-${tabId}`);
+      if (activeBtn) {
+        activeBtn.classList.add('bg-indigo-600', 'text-white', 'shadow-sm');
+        activeBtn.classList.remove('text-slate-400');
+      }
+
+      // Hide all Tab Contents
+      document.querySelectorAll('.tab-content').forEach(content => {
+        content.classList.add('hidden');
+      });
+
+      // Show Selected Tab
+      const targetTab = document.getElementById(`tab-${tabId}`);
+      if (targetTab) {
+        targetTab.classList.remove('hidden');
+      }
+
+      // Special Tab Render Actions
+      if (tabId === 'zones') renderZoneCards();
+      if (tabId === 'rules') renderRuleCards();
+      if (tabId === 'yaml') generateYamlConfig();
+      if (tabId === 'canvas' && state.canvasMode === '2d') render2DStudio();
+    }
+
+    function renderZoneCards() {
+      const container = document.getElementById('zone-cards-grid');
+      if (!container) return;
+
+      container.innerHTML = Object.values(state.zones).map(zone => `
+        <div class="glass-panel p-5 rounded-2xl border border-cyber-border space-y-4 relative overflow-hidden">
+          <div class="flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+              <input type="color" value="${zone.color}" onchange="updateZoneColor('${zone.id}', this.value)" class="w-8 h-8 rounded-lg cursor-pointer bg-transparent border-0">
+              <div>
+                <h3 class="text-sm font-bold text-slate-50">${zone.name}</h3>
+                <span class="text-[10px] font-mono text-slate-400">${zone.id}</span>
+              </div>
+            </div>
+            <span class="text-xs font-mono font-bold px-2 py-0.5 rounded bg-indigo-950 text-indigo-400 border border-indigo-500/30">
+              ${zone.brightness}%
+            </span>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3 text-xs">
+            <div>
+              <label class="block text-slate-400 text-[10px] font-bold uppercase mb-1">Dynamic Effect</label>
+              <select onchange="updateZoneEffect('${zone.id}', this.value)" class="w-full bg-slate-950 border border-cyber-border rounded-xl px-2.5 py-1.5 text-slate-200">
+                <option value="static" ${zone.effect === 'static' ? 'selected' : ''}>Static Color</option>
+                <option value="pulse" ${zone.effect === 'pulse' ? 'selected' : ''}>Breathing Pulse</option>
+                <option value="strobe" ${zone.effect === 'strobe' ? 'selected' : ''}>High Strobe</option>
+                <option value="rainbow" ${zone.effect === 'rainbow' ? 'selected' : ''}>RGB Rainbow</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-slate-400 text-[10px] font-bold uppercase mb-1">Audio Sync Band</label>
+              <select onchange="updateZoneReactivity('${zone.id}', this.value)" class="w-full bg-slate-950 border border-cyber-border rounded-xl px-2.5 py-1.5 text-slate-200">
+                <option value="bass" ${zone.reactivity === 'bass' ? 'selected' : ''}>Bass / Kick</option>
+                <option value="mid" ${zone.reactivity === 'mid' ? 'selected' : ''}>Midrange / Voice</option>
+                <option value="treble" ${zone.reactivity === 'treble' ? 'selected' : ''}>Treble / Highs</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <div class="flex justify-between text-[11px] text-slate-400 mb-1">
+              <span>Zone Brightness</span>
+              <span>${zone.brightness}%</span>
+            </div>
+            <input type="range" min="0" max="100" value="${zone.brightness}" oninput="updateZoneBrightness('${zone.id}', this.value)" class="w-full h-1.5 bg-slate-800 rounded-lg cursor-pointer">
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function updateZoneColor(zoneId, color) {
+      if (state.zones[zoneId]) {
+        state.zones[zoneId].color = color;
+        // Update 3D / 2D badge indicators
+        const badge = document.getElementById(`badge-color-${zoneId.replace('zone-', '')}`);
+        if (badge) badge.style.backgroundColor = color;
+      }
+    }
+
+    function updateZoneEffect(zoneId, effect) {
+      if (state.zones[zoneId]) state.zones[zoneId].effect = effect;
+    }
+
+    function updateZoneReactivity(zoneId, band) {
+      if (state.zones[zoneId]) state.zones[zoneId].reactivity = band;
+    }
+
+    function updateZoneBrightness(zoneId, val) {
+      if (state.zones[zoneId]) state.zones[zoneId].brightness = parseInt(val);
+      renderZoneCards();
+    }
+
+    function syncAllZonesToPrimary() {
+      const primaryColor = state.zones['zone-desk'].color;
+      Object.keys(state.zones).forEach(key => {
+        state.zones[key].color = primaryColor;
+      });
+      renderZoneCards();
+      showToast('All zones synchronized to Desk Lightbar color');
+    }
+
+    function selectZone(zoneId) {
+      setActiveTab('zones');
+      showToast(`Selected ${state.zones[zoneId].name}`);
+    }
+
+    /* ==========================================================================
+       6. LIVE GAME MATCH SIMULATOR ENGINE
+       ========================================================================== */
+    function adjustScore(team, delta) {
+      state.scores[team] = Math.max(0, state.scores[team] + delta);
+      document.getElementById(`score-${team}`).innerText = state.scores[team];
+
+      logGameEvent(`SCORE UPDATED: ${team.toUpperCase()} Team scored! (${state.scores.blue} - ${state.scores.red})`);
+
+      // Trigger score lighting pulse
+      if (team === 'blue') flashRoomColor('#06b6d4', 800);
+      else flashRoomColor('#ec4899', 800);
+    }
+
+    function triggerGameEvent(eventType) {
+      if (eventType === 'kill') {
+        logGameEvent('EVENT: Enemy Eliminated! [+100 XP]');
+        flashRoomColor('#10b981', 600);
+      } else if (eventType === 'low_health') {
+        logGameEvent('CRITICAL WARNING: Player Health < 15%');
+        flashRoomColor('#f43f5e', 1500);
+      } else if (eventType === 'ultimate') {
+        logGameEvent('ULTIMATE ABILITY ACTIVATED!');
+        flashRoomColor('#a855f7', 1200);
+      } else if (eventType === 'victory') {
+        logGameEvent('MATCH RESULT: VICTORY!');
+        flashRoomColor('#f59e0b', 2000);
+      }
+
+      // Check Rule Logic Engine
+      checkRuleTriggers(eventType);
+    }
+
+    function flashRoomColor(hexColor, durationMs) {
+      const originalColors = {};
+      Object.keys(state.zones).forEach(k => {
+        originalColors[k] = state.zones[k].color;
+        state.zones[k].color = hexColor;
+      });
+
+      setTimeout(() => {
+        Object.keys(state.zones).forEach(k => {
+          state.zones[k].color = originalColors[k];
+        });
+      }, durationMs);
+    }
+
+    function logGameEvent(msg) {
+      const logBox = document.getElementById('sim-event-log');
+      if (!logBox) return;
+
+      const timeStr = new Date().toLocaleTimeString();
+      const line = document.createElement('div');
+      line.className = 'text-slate-300';
+      line.innerHTML = `<span class="text-slate-500">[${timeStr}]</span> ${msg}`;
+
+      logBox.appendChild(line);
+      logBox.scrollTop = logBox.scrollHeight;
+    }
+
+    function clearEventLog() {
+      const logBox = document.getElementById('sim-event-log');
+      if (logBox) logBox.innerHTML = '<div class="text-slate-500">[SYSTEM] Feed Cleared.</div>';
+    }
+
+    function changeGameProfile(profile) {
+      logGameEvent(`Profile Switched to: ${profile.toUpperCase()}`);
+      showToast(`Game Profile: ${profile.toUpperCase()}`);
+    }
+
+    /* ==========================================================================
+       7. LOGIC RULES ENGINE
+       ========================================================================== */
+    function renderRuleCards() {
+      const container = document.getElementById('rules-container');
+      if (!container) return;
+
+      container.innerHTML = state.rules.map(rule => `
+        <div class="glass-panel p-4 rounded-xl border border-cyber-border flex items-center justify-between">
+          <div class="flex items-center space-x-3">
+            <button onclick="toggleRuleEnabled('${rule.id}')" class="w-10 h-6 rounded-full transition-colors relative ${rule.enabled ? 'bg-cyan-600' : 'bg-slate-800'}">
+              <div class="w-4 h-4 rounded-full bg-white absolute top-1 transition-transform ${rule.enabled ? 'left-5' : 'left-1'}"></div>
+            </button>
+            <div>
+              <h4 class="text-xs font-bold text-slate-200">${rule.name}</h4>
+              <p class="text-[10px] text-slate-400 font-mono">IF [${rule.trigger}] -> THEN [${rule.action}]</p>
+            </div>
+          </div>
+          <button onclick="deleteRule('${rule.id}')" class="text-slate-500 hover:text-rose-400 transition text-xs">
+            <i class="fa-solid fa-trash"></i>
+          </button>
+        </div>
+      `).join('');
+    }
+
+    function toggleRuleEnabled(ruleId) {
+      const rule = state.rules.find(r => r.id === ruleId);
+      if (rule) {
+        rule.enabled = !rule.enabled;
+        renderRuleCards();
+      }
+    }
+
+    function deleteRule(ruleId) {
+      state.rules = state.rules.filter(r => r.id !== ruleId);
+      renderRuleCards();
+      showToast('Rule Deleted');
+    }
+
+    function addNewRuleModal() {
+      const ruleName = prompt('Enter Rule Name:', 'Match Kill Flash');
+      if (!ruleName) return;
+
+      state.rules.push({
+        id: 'rule-' + Date.now(),
+        name: ruleName,
+        trigger: 'game_kill',
+        action: 'flash_green',
+        enabled: true
+      });
+      renderRuleCards();
+      showToast('New Logic Rule Added');
+    }
+
+    function checkRuleTriggers(eventType) {
+      state.rules.forEach(rule => {
+        if (rule.enabled && rule.trigger.includes(eventType)) {
+          showToast(`Automation Executed: ${rule.name}`, 'info');
+        }
+      });
+    }
+
+    /* ==========================================================================
+       8. YAML CONFIGURATOR & OPENRGB BRIDGE
+       ========================================================================== */
+    function generateYamlConfig() {
+      const editor = document.getElementById('yaml-code-editor');
+      if (!editor) return;
+
+      const yaml = `# GameGlow Studio Pro Max - Home Assistant & OpenRGB Configuration
+# Generated on: ${new Date().toISOString()}
+
+automation:
+  - alias: "GameGlow Studio Master Sync"
+    trigger:
+      - platform: state
+        entity_id: sensor.gameglow_match_status
+    action:
+      - service: openrgb.set_color
+        target:
+          entity_id: light.studio_desk_lightbar
+        data:
+          color: "${state.zones['zone-desk'].color}"
+          brightness: ${state.zones['zone-desk'].brightness}
+
+      - service: openrgb.set_color
+        target:
+          entity_id: light.studio_hex_wall
+        data:
+          color: "${state.zones['zone-wall'].color}"
+          brightness: ${state.zones['zone-wall'].brightness}
+
+      - service: openrgb.set_color
+        target:
+          entity_id: light.studio_monitor_bias
+        data:
+          color: "${state.zones['zone-monitor'].color}"
+          brightness: ${state.zones['zone-monitor'].brightness}
+
+openrgb_server:
+  host: "127.0.0.1"
+  port: 6742
+  audio_sync_band: "bass"
+  master_power: ${state.masterPower}
+`;
+
+      editor.value = yaml;
+    }
+
+    function copyYamlToClipboard() {
+      const editor = document.getElementById('yaml-code-editor');
+      if (editor) {
+        editor.select();
+        document.execCommand('copy');
+        showToast('YAML Copied to Clipboard!');
+      }
+    }
+
+    function downloadYamlConfig() {
+      const editor = document.getElementById('yaml-code-editor');
+      if (!editor) return;
+
+      const blob = new Blob([editor.value], { type: 'text/yaml' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'gameglow_homeassistant.yaml';
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('YAML Configuration File Downloaded');
+    }
+
+    /* ==========================================================================
+       9. GLOBAL MASTER CONTROLS & UTILITIES
+       ========================================================================== */
+    function toggleMasterPower() {
+      state.masterPower = !state.masterPower;
+
+      const btn = document.getElementById('btn-master-power');
+      const label = document.getElementById('master-power-label');
+
+      if (state.masterPower) {
+        btn.className = 'px-4 py-2 rounded-full bg-indigo-600 hover:bg-indigo-300 text-white text-xs font-semibold flex items-center space-x-2 transition';
+        label.innerText = 'POWER ON';
+        showToast('Studio Lights Turned ON');
+      } else {
+        btn.className = 'px-4 py-2 rounded-full bg-rose-500 hover:bg-rose-600 text-white text-xs font-semibold flex items-center space-x-2 transition';
+        label.innerText = 'POWER OFF';
+        showToast('Studio Lights Turned OFF', 'info');
+      }
+
+      if (state.canvasMode === '2d') render2DStudio();
+    }
+
+    function updateMasterBrightness(val) {
+      state.masterBrightness = parseInt(val);
+      document.getElementById('val-brightness').innerText = `${val}%`;
+    }
+
+    function updateMasterSpeed(val) {
+      state.masterSpeed = parseInt(val);
+      document.getElementById('val-speed').innerText = `${(val / 10).toFixed(1)}x`;
+    }
+
+    function applyPreset(presetName) {
+      if (presetName === 'cyberpunk') {
+        state.zones['zone-desk'].color = '#06b6d4';
+        state.zones['zone-wall'].color = '#ec4899';
+        state.zones['zone-monitor'].color = '#06b6d4';
+        state.zones['zone-tower'].color = '#ec4899';
+      } else if (presetName === 'matrix') {
+        state.zones['zone-desk'].color = '#10b981';
+        state.zones['zone-wall'].color = '#84cc16';
+        state.zones['zone-monitor'].color = '#059669';
+        state.zones['zone-tower'].color = '#10b981';
+      } else if (presetName === 'sunset') {
+        state.zones['zone-desk'].color = '#f59e0b';
+        state.zones['zone-wall'].color = '#f43f5e';
+        state.zones['zone-monitor'].color = '#fbbf24';
+        state.zones['zone-tower'].color = '#e11d48';
+      } else if (presetName === 'deepspace') {
+        state.zones['zone-desk'].color = '#6366f1';
+        state.zones['zone-wall'].color = '#a855f7';
+        state.zones['zone-monitor'].color = '#4f46e5';
+        state.zones['zone-tower'].color = '#9333ea';
+      }
+
+      showToast(`Applied Preset: ${presetName.toUpperCase()}`);
+      if (state.activeTab === 'zones') renderZoneCards();
+      if (state.canvasMode === '2d') render2DStudio();
+    }
+
+    function toggleCanvasView(mode) {
+      state.canvasMode = mode;
+
+      const c3d = document.getElementById('canvas-container-3d');
+      const c2d = document.getElementById('canvas-container-2d');
+      const btn3d = document.getElementById('btn-view-3d');
+      const btn2d = document.getElementById('btn-view-2d');
+
+      if (mode === '3d') {
+        c3d.classList.remove('hidden');
+        c2d.classList.add('hidden');
+        btn3d.className = 'px-3 py-1 rounded-full font-semibold bg-indigo-600 text-white transition';
+        btn2d.className = 'px-3 py-1 rounded-full font-semibold text-white/60 hover:text-white transition';
+      } else {
+        c3d.classList.add('hidden');
+        c2d.classList.remove('hidden');
+        btn2d.className = 'px-3 py-1 rounded-full font-semibold bg-indigo-600 text-white transition';
+        btn3d.className = 'px-3 py-1 rounded-full font-semibold text-white/60 hover:text-white transition';
+        render2DStudio();
+      }
+    }
+
+    function toggleGlowPropagation(enabled) {
+      state.glowPropagation = enabled;
+      showToast(`Wall Glow Propagation: ${enabled ? 'ON' : 'OFF'}`);
+    }
+
+    function showToast(message, type = 'success') {
+      const container = document.getElementById('toast-container');
+      if (!container) return;
+
+      const toast = document.createElement('div');
+      toast.className = `px-4 py-2.5 rounded-xl border text-xs font-semibold shadow-2xl flex items-center space-x-2 transition-all transform translate-y-2 opacity-0 pointer-events-auto ${
+        type === 'success' 
+          ? 'bg-white border-emerald-500 text-emerald-300 shadow-lg' 
+          : 'bg-white border-indigo-500 text-indigo-300 shadow-lg'
+      }`;
+
+      toast.innerHTML = `
+        <i class="fa-solid ${type === 'success' ? 'fa-circle-check text-emerald-400' : 'fa-circle-info text-indigo-400'}"></i>
+        <span>${message}</span>
+      `;
+
+      container.appendChild(toast);
+
+      // Trigger animation
+      setTimeout(() => {
+        toast.classList.remove('translate-y-2', 'opacity-0');
+      }, 10);
+
+      // Remove after 3 seconds
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-2');
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+
+    window.onload = function() {
+      init3DStudio();
+      animate3D();
+      renderZoneCards();
+      renderRuleCards();
+      generateYamlConfig();
+    };
+  </script>
+</body>
+</html>
