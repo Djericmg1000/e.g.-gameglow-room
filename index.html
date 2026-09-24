@@ -176,45 +176,163 @@
     input[type="range"] {
       accent-color: #007fff;
     }
+
+    /* Primary navigation items */
+    .nav-item {
+      color: #8B8A99;
+    }
+
+    .nav-item:hover {
+      background: #F7F6FF;
+      color: #25252F;
+    }
+
+    .nav-item.active {
+      background: #007fff;
+      color: #ffffff;
+    }
+
+    .nav-item.active .ml-auto {
+      background: rgba(255, 255, 255, 0.22);
+      color: #ffffff;
+    }
+
+    /* Device card power switch */
+    .switch {
+      width: 42px;
+      height: 24px;
+      border-radius: 9999px;
+      background: #DEDDEB;
+      position: relative;
+      transition: background .2s ease;
+      flex-shrink: 0;
+    }
+
+    .switch::after {
+      content: '';
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 18px;
+      height: 18px;
+      border-radius: 9999px;
+      background: #fff;
+      box-shadow: 0 1px 3px rgba(21, 21, 29, 0.25);
+      transition: transform .2s ease;
+    }
+
+    .switch.on {
+      background: #007fff;
+    }
+
+    .switch.on::after {
+      transform: translateX(18px);
+    }
   </style>
 </head>
-<body class="h-screen w-screen flex flex-col select-none overflow-hidden text-slate-200">
+<body class="h-screen w-screen flex select-none overflow-hidden text-slate-200">
 
-  <header class="h-16 bg-white border-b border-cyber-border px-5 flex items-center justify-between z-30 shrink-0">
-    <div class="flex items-center space-x-3">
-      <div class="w-10 h-10 rounded-2xl bg-indigo-600 flex items-center justify-center">
-        <i class="fa-solid text-white text-lg fa-bolt"></i>
+  <!-- SIGN IN -->
+  <div id="login-screen" class="fixed inset-0 z-50 bg-cyber-black flex items-center justify-center p-6">
+    <div class="w-full max-w-sm glass-panel rounded-3xl p-8 space-y-6">
+      <div class="flex items-center space-x-3">
+        <div class="w-11 h-11 rounded-2xl bg-indigo-600 flex items-center justify-center">
+          <i class="fa-solid text-white text-lg fa-bolt"></i>
+        </div>
+        <div>
+          <h1 class="font-bold text-lg tracking-tight text-slate-50 leading-tight">GameGlow<span class="text-indigo-500">Room</span></h1>
+          <p class="text-[11px] text-slate-400">Sign in to your studio</p>
+        </div>
+      </div>
+
+      <form onsubmit="return signIn(event)" class="space-y-3">
+        <div>
+          <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">Email</label>
+          <input id="login-email" type="email" value="eric@gameglow.room" class="w-full bg-cyber-black border border-cyber-border rounded-xl px-3 py-2.5 text-sm text-slate-100 outline-none focus:border-indigo-500 transition">
+        </div>
+        <div>
+          <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">Password</label>
+          <input id="login-password" type="password" value="demo" class="w-full bg-cyber-black border border-cyber-border rounded-xl px-3 py-2.5 text-sm text-slate-100 outline-none focus:border-indigo-500 transition">
+        </div>
+        <p id="login-error" class="hidden text-[11px] font-semibold text-rose-500">Enter an email address to continue.</p>
+        <button type="submit" class="w-full py-2.5 rounded-full bg-indigo-600 hover:bg-indigo-300 text-white text-sm font-semibold transition">Sign in</button>
+      </form>
+
+      <p class="text-[11px] text-slate-400 text-center">Local demo sign-in — no account required.</p>
+    </div>
+  </div>
+
+  <!-- PRIMARY APP NAVIGATION -->
+  <nav class="w-60 bg-white border-r border-cyber-border flex flex-col shrink-0 z-30">
+    <div class="h-16 px-5 flex items-center space-x-3 border-b border-cyber-border">
+      <div class="w-9 h-9 rounded-2xl bg-indigo-600 flex items-center justify-center">
+        <i class="fa-solid text-white fa-bolt"></i>
       </div>
       <div>
-        <h1 class="font-bold text-base tracking-tight text-slate-50">
+        <h1 class="font-bold text-sm tracking-tight text-slate-50 leading-tight">
           GameGlow<span class="text-indigo-500">Room</span>
-          <span class="ml-1.5 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-indigo-950 text-indigo-300 align-middle">PRO MAX</span>
         </h1>
-        <p class="text-[10px] text-slate-400 -mt-0.5">RGB studio lighting &amp; audio engine</p>
+        <p class="text-[10px] text-slate-400 -mt-0.5">Studio Pro Max</p>
       </div>
     </div>
 
-    <!-- Central Mode Selector Tabs -->
-    <div class="hidden md:flex items-center bg-cyber-black p-1 rounded-full border border-cyber-border space-x-1">
-      <button onclick="setActiveTab('canvas')" id="tab-btn-canvas" class="tab-btn active px-3.5 py-1.5 rounded-full text-xs font-semibold flex items-center space-x-2 transition bg-indigo-600 text-white shadow-sm">
-        <i class="fa-solid fa-cube"></i><span>Studio Canvas</span>
+    <div class="flex-1 overflow-y-auto p-3 space-y-1">
+      <p class="px-3 pb-1 pt-1 text-[10px] font-bold uppercase tracking-wider text-slate-400">Control</p>
+      <button onclick="setActiveTab('dashboard')" id="tab-btn-dashboard" class="nav-item w-full px-3 py-2 rounded-xl text-sm font-semibold flex items-center space-x-3 transition">
+        <i class="fa-solid fa-gauge-high w-4 text-center"></i><span>Dashboard</span>
       </button>
-      <button onclick="setActiveTab('zones')" id="tab-btn-zones" class="tab-btn px-3.5 py-1.5 rounded-full text-xs font-semibold flex items-center space-x-2 text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 transition">
-        <i class="fa-solid fa-sliders"></i><span>Zone Effects</span>
+      <button onclick="setActiveTab('devices')" id="tab-btn-devices" class="nav-item w-full px-3 py-2 rounded-xl text-sm font-semibold flex items-center space-x-3 transition">
+        <i class="fa-solid fa-lightbulb w-4 text-center"></i><span>Devices</span>
+        <span id="nav-devices-count" class="ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-indigo-950 text-indigo-500">6</span>
       </button>
-      <button onclick="setActiveTab('simulator')" id="tab-btn-simulator" class="tab-btn px-3.5 py-1.5 rounded-full text-xs font-semibold flex items-center space-x-2 text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 transition">
-        <i class="fa-solid fa-gamepad"></i><span>Game Sync</span>
+      <button onclick="setActiveTab('canvas')" id="tab-btn-canvas" class="nav-item w-full px-3 py-2 rounded-xl text-sm font-semibold flex items-center space-x-3 transition">
+        <i class="fa-solid fa-cube w-4 text-center"></i><span>Rooms</span>
       </button>
-      <button onclick="setActiveTab('rules')" id="tab-btn-rules" class="tab-btn px-3.5 py-1.5 rounded-full text-xs font-semibold flex items-center space-x-2 text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 transition">
-        <i class="fa-solid fa-diagram-project"></i><span>Logic Rules</span>
+      <button onclick="setActiveTab('zones')" id="tab-btn-zones" class="nav-item w-full px-3 py-2 rounded-xl text-sm font-semibold flex items-center space-x-3 transition">
+        <i class="fa-solid fa-sliders w-4 text-center"></i><span>Scenes</span>
       </button>
-      <button onclick="setActiveTab('yaml')" id="tab-btn-yaml" class="tab-btn px-3.5 py-1.5 rounded-full text-xs font-semibold flex items-center space-x-2 text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 transition">
-        <i class="fa-solid fa-code"></i><span>YAML / OpenRGB</span>
+
+      <p class="px-3 pb-1 pt-4 text-[10px] font-bold uppercase tracking-wider text-slate-400">Automate</p>
+      <button onclick="setActiveTab('simulator')" id="tab-btn-simulator" class="nav-item w-full px-3 py-2 rounded-xl text-sm font-semibold flex items-center space-x-3 transition">
+        <i class="fa-solid fa-gamepad w-4 text-center"></i><span>Game Sync</span>
       </button>
+      <button onclick="setActiveTab('rules')" id="tab-btn-rules" class="nav-item w-full px-3 py-2 rounded-xl text-sm font-semibold flex items-center space-x-3 transition">
+        <i class="fa-solid fa-diagram-project w-4 text-center"></i><span>Automations</span>
+      </button>
+      <button onclick="setActiveTab('yaml')" id="tab-btn-yaml" class="nav-item w-full px-3 py-2 rounded-xl text-sm font-semibold flex items-center space-x-3 transition">
+        <i class="fa-solid fa-code w-4 text-center"></i><span>Integrations</span>
+      </button>
+    </div>
+
+    <div class="p-3 border-t border-cyber-border">
+      <div class="flex items-center space-x-3 px-2 py-2 rounded-xl hover:bg-cyber-black transition cursor-pointer">
+        <div id="account-initials" class="w-8 h-8 rounded-full bg-indigo-950 text-indigo-500 flex items-center justify-center text-xs font-bold">EG</div>
+        <div class="min-w-0">
+          <p id="account-name" class="text-xs font-semibold text-slate-100 truncate">Eric G.</p>
+          <p class="text-[10px] text-slate-400 truncate">Studio Owner</p>
+        </div>
+        <button onclick="signOut()" title="Sign out" class="ml-auto text-slate-400 text-xs hover:text-slate-100 transition">
+          <i class="fa-solid fa-arrow-right-from-bracket"></i>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="flex-1 flex flex-col overflow-hidden">
+
+  <header class="h-16 bg-white border-b border-cyber-border px-6 flex items-center justify-between z-20 shrink-0">
+    <div>
+      <h2 id="page-title" class="font-bold text-base tracking-tight text-slate-50">Dashboard</h2>
+      <p id="page-subtitle" class="text-[11px] text-slate-400 -mt-0.5">Overview of your connected studio</p>
     </div>
 
     <!-- Master Sync & Audio Controls -->
     <div class="flex items-center space-x-3">
+      <div class="hidden xl:flex items-center space-x-2 px-3 py-2 rounded-full border border-cyber-border bg-cyber-black text-xs text-slate-400 w-56">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input id="device-search" oninput="filterDevices(this.value)" placeholder="Search devices" class="bg-transparent outline-none w-full text-slate-100 placeholder:text-slate-400">
+      </div>
+
       <!-- Master Audio Toggle -->
       <button id="btn-audio-engine" onclick="toggleAudioEngine()" class="px-3.5 py-2 rounded-full border border-cyber-border bg-white hover:bg-slate-900 text-xs font-semibold flex items-center space-x-2 transition text-slate-300">
         <i class="fa-solid fa-volume-xmark text-rose-400" id="audio-icon"></i>
@@ -224,15 +342,15 @@
       <!-- Master Power Toggle -->
       <button id="btn-master-power" onclick="toggleMasterPower()" class="px-4 py-2 rounded-full bg-indigo-600 hover:bg-indigo-300 text-white text-xs font-semibold flex items-center space-x-2 transition">
         <i class="fa-solid fa-power-off"></i>
-        <span id="master-power-label">POWER ON</span>
+        <span id="master-power-label">Power On</span>
       </button>
     </div>
   </header>
 
   <main class="flex-1 flex overflow-hidden relative">
 
-    <!-- LEFT SIDEBAR: Quick Controls & Dynamic Preset Selector -->
-    <aside class="w-72 glass-panel border-r border-cyber-border p-4 flex flex-col justify-between shrink-0 hidden lg:flex z-20">
+    <!-- STUDIO CONTROL RAIL -->
+    <aside id="studio-rail" class="w-72 glass-panel border-r border-cyber-border p-4 flex-col justify-between shrink-0 z-10" style="display:none">
       <div class="space-y-5 overflow-y-auto pr-1">
 
         <!-- Master Brightness & Speed -->
@@ -351,7 +469,63 @@
     <section class="flex-1 flex flex-col overflow-hidden relative bg-cyber-black">
 
 
-      <div id="tab-canvas" class="tab-content flex-1 flex flex-col relative h-full p-4">
+      <!-- DASHBOARD -->
+      <div id="tab-dashboard" class="tab-content flex-1 p-6 overflow-y-auto">
+        <div class="max-w-6xl mx-auto space-y-6">
+          <div id="dashboard-stats" class="grid grid-cols-2 lg:grid-cols-4 gap-4"></div>
+
+          <div class="grid lg:grid-cols-3 gap-4">
+            <div class="lg:col-span-2 glass-panel rounded-2xl p-5 space-y-4">
+              <div class="flex items-center justify-between">
+                <h3 class="text-sm font-bold text-slate-50">Favourite devices</h3>
+                <button onclick="setActiveTab('devices')" class="text-xs font-semibold text-indigo-500 hover:text-indigo-300 transition">View all</button>
+              </div>
+              <div id="dashboard-devices" class="grid sm:grid-cols-2 gap-3"></div>
+            </div>
+
+            <div class="space-y-4">
+              <div class="glass-panel rounded-2xl p-5 space-y-3">
+                <h3 class="text-sm font-bold text-slate-50">Quick scenes</h3>
+                <div id="dashboard-scenes" class="space-y-2"></div>
+              </div>
+              <div class="glass-panel rounded-2xl p-5 space-y-3">
+                <h3 class="text-sm font-bold text-slate-50">Recent activity</h3>
+                <div id="dashboard-activity" class="space-y-2 text-xs text-slate-400"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DEVICES -->
+      <div id="tab-devices" class="tab-content flex-1 p-6 overflow-y-auto hidden">
+        <div class="max-w-6xl mx-auto space-y-5">
+          <div class="flex items-center justify-between flex-wrap gap-3">
+            <div id="device-room-filters" class="flex items-center bg-white p-1 rounded-full border border-cyber-border space-x-1 text-xs"></div>
+            <div class="flex items-center space-x-2">
+              <button onclick="setAllDevices(true)" class="px-3.5 py-2 rounded-full border border-cyber-border bg-white hover:bg-cyber-black text-xs font-semibold text-slate-200 transition">All on</button>
+              <button onclick="setAllDevices(false)" class="px-3.5 py-2 rounded-full border border-cyber-border bg-white hover:bg-cyber-black text-xs font-semibold text-slate-200 transition">All off</button>
+              <button onclick="addDevice()" class="px-4 py-2 rounded-full bg-indigo-600 hover:bg-indigo-300 text-white text-xs font-semibold flex items-center space-x-2 transition">
+                <i class="fa-solid fa-plus"></i><span>Add device</span>
+              </button>
+            </div>
+          </div>
+
+          <div id="device-grid" class="grid sm:grid-cols-2 xl:grid-cols-3 gap-4"></div>
+          <p id="device-empty" class="hidden text-center text-xs text-slate-400 py-10">No devices match this filter.</p>
+        </div>
+      </div>
+
+      <div id="tab-canvas" class="tab-content flex-1 flex flex-col relative h-full p-4 hidden">
+        <!-- Room Switcher -->
+        <div class="flex items-center flex-wrap gap-2 mb-3">
+          <div id="room-list" class="flex items-center flex-wrap gap-2"></div>
+          <button onclick="addRoom()" class="px-3.5 py-2 rounded-full bg-indigo-600 hover:bg-indigo-300 text-white text-xs font-semibold flex items-center space-x-2 transition">
+            <i class="fa-solid fa-plus"></i><span>Add room</span>
+          </button>
+        </div>
+
+        <div class="flex-1 relative">
         <!-- Canvas Toolbar -->
         <div class="absolute top-7 left-7 right-7 z-10 flex justify-between items-center pointer-events-none">
           <div class="pointer-events-auto stage-chip px-2 py-1.5 rounded-full flex items-center space-x-2 text-xs">
@@ -405,11 +579,25 @@
             <span>PC Tower ARGB</span>
           </button>
         </div>
+        </div>
       </div>
 
       <div id="tab-zones" class="tab-content flex-1 p-6 overflow-y-auto hidden">
         <div class="max-w-5xl mx-auto space-y-6">
-          <div class="flex items-center justify-between border-b border-cyber-border pb-4">
+          <div class="flex items-center justify-between">
+            <div>
+              <h2 class="text-xl font-bold text-slate-50 tracking-tight">Saved Scenes</h2>
+              <p class="text-xs text-slate-400">One tap to push a saved look to every zone in the room.</p>
+            </div>
+            <button onclick="addScene()" class="px-4 py-2 rounded-full bg-indigo-600 hover:bg-indigo-300 text-xs font-semibold text-white transition flex items-center space-x-2">
+              <i class="fa-solid fa-plus"></i>
+              <span>Add scene</span>
+            </button>
+          </div>
+
+          <div id="scene-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+
+          <div class="flex items-center justify-between border-b border-cyber-border pb-4 pt-2">
             <div>
               <h2 class="text-xl font-bold text-slate-50 tracking-tight">Multi-Zone Lighting Controller</h2>
               <p class="text-xs text-slate-400">Configure independent RGB colors, effects, and audio frequency reactivity for each studio fixture.</p>
@@ -625,6 +813,7 @@
 
     </section>
   </main>
+  </div>
 
   <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col space-y-2 pointer-events-none"></div>
 
@@ -639,7 +828,22 @@
       audioEngineActive: false,
       glowPropagation: true,
       canvasMode: '3d', // '3d' or '2d'
-      activeTab: 'canvas',
+      activeTab: 'dashboard',
+      deviceRoomFilter: 'all',
+      deviceQuery: '',
+      activity: [],
+      activeRoom: 'room-studio',
+      rooms: [
+        { id: 'room-studio', name: 'Studio' },
+        { id: 'room-lounge', name: 'Lounge' },
+        { id: 'room-network', name: 'Network' }
+      ],
+      scenes: [
+        { id: 'scene-cyberpunk', name: 'Cyberpunk', description: 'Neon pink & cyan', colors: ['#06b6d4', '#ec4899', '#06b6d4', '#ec4899'] },
+        { id: 'scene-matrix', name: 'Matrix Rain', description: 'Digital emerald', colors: ['#10b981', '#84cc16', '#059669', '#10b981'] },
+        { id: 'scene-sunset', name: 'Neon Sunset', description: 'Warm amber & rose', colors: ['#f59e0b', '#f43f5e', '#fbbf24', '#e11d48'] },
+        { id: 'scene-deepspace', name: 'Deep Space', description: 'Cosmic indigo', colors: ['#6366f1', '#a855f7', '#4f46e5', '#9333ea'] }
+      ],
       scores: { blue: 0, red: 0 },
       
       // Multi-zone Light Configurations
@@ -677,6 +881,16 @@
           brightness: 85
         }
       },
+
+      // Connected Devices (device-grid view)
+      devices: [
+        { id: 'dev-desk', name: 'Desk Ambient Lightbar', room: 'Studio', type: 'Light strip', zone: 'zone-desk', on: true, signal: 'Excellent', firmware: '2.4.1' },
+        { id: 'dev-wall', name: 'Hexagon Wall Panels', room: 'Studio', type: 'Panel array', zone: 'zone-wall', on: true, signal: 'Good', firmware: '2.4.1' },
+        { id: 'dev-monitor', name: 'Monitor Bias Backlight', room: 'Studio', type: 'Bias light', zone: 'zone-monitor', on: true, signal: 'Excellent', firmware: '1.9.0' },
+        { id: 'dev-tower', name: 'PC Tower ARGB Fans', room: 'Studio', type: 'Fan controller', zone: 'zone-tower', on: true, signal: 'Excellent', firmware: '3.0.2' },
+        { id: 'dev-bridge', name: 'OpenRGB Bridge', room: 'Network', type: 'Hub', zone: null, on: true, signal: 'Wired', firmware: '3.0.0' },
+        { id: 'dev-lamp', name: 'Couch Floor Lamp', room: 'Lounge', type: 'Smart bulb', zone: null, on: false, signal: 'Fair', firmware: '1.2.7' }
+      ],
 
       // Rule Logic Engine Data
       rules: [
@@ -1074,19 +1288,30 @@
     /* ==========================================================================
        5. UI TABS & ZONE CONTROLLER RENDERING
        ========================================================================== */
+    const PAGE_META = {
+      dashboard: ['Dashboard', 'Overview of your connected studio'],
+      devices: ['Devices', 'Every fixture and hub paired with this room'],
+      canvas: ['Rooms', 'Live 3D room view, layout and zone selection'],
+      zones: ['Scenes', 'Saved looks and per-zone lighting effects'],
+      simulator: ['Game Sync', 'Match telemetry driving your lighting'],
+      rules: ['Automations', 'IF / THEN rules for lights and audio'],
+      yaml: ['Integrations', 'Home Assistant YAML and OpenRGB bridge']
+    };
+
+    // Tabs that keep the studio control rail visible
+    const RAIL_TABS = ['canvas', 'zones'];
+
     function setActiveTab(tabId) {
       state.activeTab = tabId;
 
-      // Update Navigation Buttons
-      document.querySelectorAll('.tab-btn').forEach(btn => {
-        btn.classList.remove('bg-indigo-600', 'text-white', 'shadow-sm');
-        btn.classList.add('text-slate-400');
-      });
-
+      document.querySelectorAll('.nav-item').forEach(btn => btn.classList.remove('active'));
       const activeBtn = document.getElementById(`tab-btn-${tabId}`);
-      if (activeBtn) {
-        activeBtn.classList.add('bg-indigo-600', 'text-white', 'shadow-sm');
-        activeBtn.classList.remove('text-slate-400');
+      if (activeBtn) activeBtn.classList.add('active');
+
+      const meta = PAGE_META[tabId];
+      if (meta) {
+        document.getElementById('page-title').innerText = meta[0];
+        document.getElementById('page-subtitle').innerText = meta[1];
       }
 
       // Hide all Tab Contents
@@ -1100,11 +1325,356 @@
         targetTab.classList.remove('hidden');
       }
 
+      const rail = document.getElementById('studio-rail');
+      if (rail) rail.style.display = RAIL_TABS.includes(tabId) ? 'flex' : 'none';
+
       // Special Tab Render Actions
-      if (tabId === 'zones') renderZoneCards();
+      if (tabId === 'dashboard') renderDashboard();
+      if (tabId === 'devices') renderDevices();
+      if (tabId === 'zones') { renderSceneCards(); renderZoneCards(); }
       if (tabId === 'rules') renderRuleCards();
       if (tabId === 'yaml') generateYamlConfig();
-      if (tabId === 'canvas' && state.canvasMode === '2d') render2DStudio();
+      if (tabId === 'canvas') {
+        renderRoomList();
+        if (!renderer) {
+          init3DStudio();
+          animate3D();
+        } else {
+          onWindowResize3D();
+        }
+        if (state.canvasMode === '2d') render2DStudio();
+      }
+    }
+
+    /* ==========================================================================
+       5b. DEVICES, DASHBOARD, ROOMS & SCENES
+       ========================================================================== */
+    function deviceIcon(device) {
+      if (device.type === 'Hub') return 'fa-server';
+      if (device.type === 'Fan controller') return 'fa-fan';
+      if (device.type === 'Smart bulb') return 'fa-lightbulb';
+      if (device.type === 'Panel array') return 'fa-shapes';
+      return 'fa-lightbulb';
+    }
+
+    function deviceColor(device) {
+      return device.zone && state.zones[device.zone] ? state.zones[device.zone].color : '#007fff';
+    }
+
+    function visibleDevices() {
+      const query = state.deviceQuery.trim().toLowerCase();
+      return state.devices.filter(device => {
+        const roomOk = state.deviceRoomFilter === 'all' || device.room === state.deviceRoomFilter;
+        const queryOk = !query || `${device.name} ${device.room} ${device.type}`.toLowerCase().includes(query);
+        return roomOk && queryOk;
+      });
+    }
+
+    function deviceCard(device, compact = false) {
+      const color = deviceColor(device);
+      return `
+        <div class="glass-panel rounded-2xl p-4 flex items-start space-x-3 transition ${device.on ? '' : 'opacity-70'}">
+          <div class="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0" style="background:${color}1f;color:${color}">
+            <i class="fa-solid ${deviceIcon(device)}"></i>
+          </div>
+          <div class="min-w-0 flex-1">
+            <div class="flex items-start justify-between space-x-2">
+              <div class="min-w-0">
+                <h4 class="text-sm font-semibold text-slate-50 truncate">${device.name}</h4>
+                <p class="text-[11px] text-slate-400 truncate">${device.room} • ${device.type}</p>
+              </div>
+              <button onclick="toggleDevice('${device.id}')" aria-label="Toggle ${device.name}" class="switch ${device.on ? 'on' : ''}"></button>
+            </div>
+            ${compact ? '' : `
+            <div class="flex items-center justify-between mt-3 text-[11px]">
+              <span class="px-2 py-0.5 rounded-full ${device.on ? 'bg-emerald-950 text-emerald-400' : 'bg-cyber-black text-slate-400'} font-semibold">
+                ${device.on ? 'Online' : 'Off'}
+              </span>
+              <span class="text-slate-400">Signal ${device.signal} • fw ${device.firmware}</span>
+            </div>
+            ${device.zone ? `
+            <button onclick="openZoneFromDevice('${device.zone}')" class="mt-3 text-[11px] font-semibold text-indigo-500 hover:text-indigo-300 transition">
+              Open lighting controls <i class="fa-solid fa-arrow-right ml-1"></i>
+            </button>` : ''}`}
+          </div>
+        </div>
+      `;
+    }
+
+    function renderDevices() {
+      const grid = document.getElementById('device-grid');
+      const filters = document.getElementById('device-room-filters');
+      if (!grid || !filters) return;
+
+      const rooms = ['all', ...Array.from(new Set(state.devices.map(device => device.room)))];
+      filters.innerHTML = rooms.map(room => `
+        <button onclick="setDeviceRoomFilter('${room}')" class="px-3 py-1.5 rounded-full font-semibold transition ${
+          state.deviceRoomFilter === room ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-slate-100'
+        }">${room === 'all' ? 'All rooms' : room}</button>
+      `).join('');
+
+      const devices = visibleDevices();
+      grid.innerHTML = devices.map(device => deviceCard(device)).join('');
+      document.getElementById('device-empty').classList.toggle('hidden', devices.length > 0);
+      document.getElementById('nav-devices-count').innerText = state.devices.filter(device => device.on).length;
+    }
+
+    function setDeviceRoomFilter(room) {
+      state.deviceRoomFilter = room;
+      renderDevices();
+    }
+
+    function filterDevices(query) {
+      state.deviceQuery = query;
+      if (state.activeTab !== 'devices') setActiveTab('devices');
+      else renderDevices();
+    }
+
+    function toggleDevice(deviceId) {
+      const device = state.devices.find(item => item.id === deviceId);
+      if (!device) return;
+      device.on = !device.on;
+
+      // Mirror the switch onto the zone that fixture drives in the 3D room
+      const zone = device.zone ? state.zones[device.zone] : null;
+      if (zone) {
+        if (device.on) {
+          zone.brightness = device.lastBrightness != null ? device.lastBrightness : zone.brightness;
+        } else {
+          device.lastBrightness = zone.brightness;
+          zone.brightness = 0;
+        }
+        if (state.activeTab === 'zones') renderZoneCards();
+      }
+
+      logActivity(`${device.name} turned ${device.on ? 'on' : 'off'}`);
+      showToast(`${device.name} ${device.on ? 'on' : 'off'}`, device.on ? 'success' : 'info');
+      renderDevices();
+      renderDashboard();
+      if (state.canvasMode === '2d') render2DStudio();
+    }
+
+    function setAllDevices(on) {
+      visibleDevices().forEach(device => { device.on = on; });
+      logActivity(`All visible devices turned ${on ? 'on' : 'off'}`);
+      showToast(`All devices ${on ? 'on' : 'off'}`, on ? 'success' : 'info');
+      renderDevices();
+      renderDashboard();
+    }
+
+    function addDevice() {
+      const name = prompt('Device name');
+      if (!name) return;
+      const room = prompt('Room', 'Studio') || 'Studio';
+      state.devices.push({
+        id: `dev-${Date.now()}`,
+        name,
+        room,
+        type: 'Smart bulb',
+        zone: null,
+        on: true,
+        signal: 'Good',
+        firmware: '1.0.0'
+      });
+      logActivity(`${name} paired in ${room}`);
+      showToast(`${name} added to ${room}`);
+      renderDevices();
+      renderDashboard();
+      renderRoomList();
+    }
+
+    function openZoneFromDevice(zoneId) {
+      selectZone(zoneId);
+    }
+
+    function logActivity(message) {
+      state.activity.unshift({ message, at: new Date() });
+      state.activity = state.activity.slice(0, 6);
+      renderDashboard();
+    }
+
+    function renderDashboard() {
+      const stats = document.getElementById('dashboard-stats');
+      if (!stats) return;
+
+      const onCount = state.devices.filter(device => device.on).length;
+      const rooms = new Set(state.devices.map(device => device.room)).size;
+      const activeRules = state.rules.filter(rule => rule.enabled).length;
+
+      const cards = [
+        ['Devices on', `${onCount} / ${state.devices.length}`, 'fa-lightbulb', '#007fff'],
+        ['Rooms', `${rooms}`, 'fa-door-open', '#644EF3'],
+        ['Master brightness', `${state.masterBrightness}%`, 'fa-sun', '#FFB546'],
+        ['Automations active', `${activeRules}`, 'fa-diagram-project', '#5BDF91']
+      ];
+
+      stats.innerHTML = cards.map(([label, value, icon, color]) => `
+        <div class="glass-panel rounded-2xl p-4">
+          <div class="w-9 h-9 rounded-xl flex items-center justify-center mb-3" style="background:${color}1f;color:${color}">
+            <i class="fa-solid ${icon}"></i>
+          </div>
+          <p class="text-xl font-bold text-slate-50 leading-none">${value}</p>
+          <p class="text-[11px] text-slate-400 mt-1">${label}</p>
+        </div>
+      `).join('');
+
+      document.getElementById('dashboard-devices').innerHTML =
+        state.devices.slice(0, 4).map(device => deviceCard(device, true)).join('');
+
+      document.getElementById('dashboard-scenes').innerHTML = state.scenes.map(scene => `
+        <button onclick="applyScene('${scene.id}')" class="w-full px-3 py-2.5 rounded-xl border border-cyber-border bg-white hover:bg-cyber-black transition flex items-center space-x-3 text-left">
+          <div class="flex -space-x-1">
+            ${scene.colors.map(color => `<span class="w-3 h-3 rounded-full border border-white" style="background:${color}"></span>`).join('')}
+          </div>
+          <span class="text-xs font-semibold text-slate-100">${scene.name}</span>
+          <i class="fa-solid fa-play ml-auto text-[10px] text-slate-400"></i>
+        </button>
+      `).join('');
+
+      const activity = document.getElementById('dashboard-activity');
+      activity.innerHTML = state.activity.length
+        ? state.activity.map(entry => `
+            <div class="flex items-start space-x-2">
+              <span class="w-1.5 h-1.5 rounded-full bg-indigo-500 mt-1.5"></span>
+              <span class="flex-1 text-slate-300">${entry.message}</span>
+              <span class="text-slate-400">${entry.at.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+            </div>
+          `).join('')
+        : '<p class="text-slate-400">No activity yet — toggle a device to get started.</p>';
+    }
+
+    function renderRoomList() {
+      const list = document.getElementById('room-list');
+      if (!list) return;
+
+      list.innerHTML = state.rooms.map(room => {
+        const count = state.devices.filter(device => device.room === room.name).length;
+        const active = state.activeRoom === room.id;
+        return `
+          <div class="flex items-center space-x-1 pl-3 pr-1.5 py-1.5 rounded-full border transition ${
+            active ? 'bg-indigo-600 border-indigo-600 text-white' : 'bg-white border-cyber-border text-slate-200'
+          }">
+            <button onclick="selectRoom('${room.id}')" class="text-xs font-semibold">${room.name}</button>
+            <span class="text-[10px] ${active ? 'text-white/70' : 'text-slate-400'}">${count}</span>
+            <button onclick="renameRoom('${room.id}')" title="Rename room" class="w-6 h-6 rounded-full hover:bg-black/10 text-[10px]"><i class="fa-solid fa-pen"></i></button>
+            <button onclick="deleteRoom('${room.id}')" title="Delete room" class="w-6 h-6 rounded-full hover:bg-black/10 text-[10px]"><i class="fa-solid fa-trash"></i></button>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function selectRoom(roomId) {
+      state.activeRoom = roomId;
+      const room = state.rooms.find(item => item.id === roomId);
+      renderRoomList();
+      if (room) showToast(`Viewing ${room.name}`, 'info');
+    }
+
+    function addRoom() {
+      const name = prompt('Room name');
+      if (!name) return;
+      state.rooms.push({ id: `room-${Date.now()}`, name });
+      logActivity(`Room "${name}" created`);
+      showToast(`Room "${name}" added`);
+      renderRoomList();
+    }
+
+    function renameRoom(roomId) {
+      const room = state.rooms.find(item => item.id === roomId);
+      if (!room) return;
+      const name = prompt('Rename room', room.name);
+      if (!name) return;
+      state.devices.forEach(device => { if (device.room === room.name) device.room = name; });
+      room.name = name;
+      renderRoomList();
+      renderDevices();
+      showToast('Room renamed');
+    }
+
+    function deleteRoom(roomId) {
+      const room = state.rooms.find(item => item.id === roomId);
+      if (!room || !confirm(`Delete "${room.name}"? Devices stay paired but become unassigned.`)) return;
+      state.rooms = state.rooms.filter(item => item.id !== roomId);
+      state.devices.forEach(device => { if (device.room === room.name) device.room = 'Unassigned'; });
+      if (state.activeRoom === roomId) state.activeRoom = state.rooms[0] ? state.rooms[0].id : null;
+      renderRoomList();
+      renderDevices();
+      showToast(`Room "${room.name}" deleted`, 'info');
+    }
+
+    function renderSceneCards() {
+      const grid = document.getElementById('scene-grid');
+      if (!grid) return;
+
+      grid.innerHTML = state.scenes.map(scene => `
+        <div class="glass-panel rounded-2xl p-4 space-y-3">
+          <div class="flex items-start justify-between">
+            <div>
+              <h4 class="text-sm font-semibold text-slate-50">${scene.name}</h4>
+              <p class="text-[11px] text-slate-400">${scene.description}</p>
+            </div>
+            <div class="flex -space-x-1">
+              ${scene.colors.map(color => `<span class="w-4 h-4 rounded-full border-2 border-white" style="background:${color}"></span>`).join('')}
+            </div>
+          </div>
+          <div class="flex items-center space-x-2">
+            <button onclick="applyScene('${scene.id}')" class="px-3 py-1.5 rounded-full bg-indigo-600 hover:bg-indigo-300 text-white text-[11px] font-semibold transition">Apply</button>
+            <button onclick="editScene('${scene.id}')" class="px-3 py-1.5 rounded-full border border-cyber-border text-[11px] font-semibold text-slate-200 hover:bg-cyber-black transition">Edit</button>
+            <button onclick="deleteScene('${scene.id}')" class="px-3 py-1.5 rounded-full border border-cyber-border text-[11px] font-semibold text-rose-500 hover:bg-rose-950 transition">Delete</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function applyScene(sceneId) {
+      const scene = state.scenes.find(item => item.id === sceneId);
+      if (!scene) return;
+      Object.keys(state.zones).forEach((zoneId, index) => {
+        state.zones[zoneId].color = scene.colors[index % scene.colors.length];
+      });
+      logActivity(`Scene "${scene.name}" applied`);
+      showToast(`Scene "${scene.name}" applied`);
+      renderZoneCards();
+      if (state.canvasMode === '2d') render2DStudio();
+    }
+
+    function addScene() {
+      const name = prompt('Scene name');
+      if (!name) return;
+      state.scenes.push({
+        id: `scene-${Date.now()}`,
+        name,
+        description: 'Captured from current zone colours',
+        colors: Object.values(state.zones).map(zone => zone.color)
+      });
+      logActivity(`Scene "${name}" saved`);
+      showToast(`Scene "${name}" saved from current lighting`);
+      renderSceneCards();
+      renderDashboard();
+    }
+
+    function editScene(sceneId) {
+      const scene = state.scenes.find(item => item.id === sceneId);
+      if (!scene) return;
+      const name = prompt('Scene name', scene.name);
+      if (!name) return;
+      scene.name = name;
+      scene.description = prompt('Description', scene.description) || scene.description;
+      if (confirm('Recapture colours from the current zone setup?')) {
+        scene.colors = Object.values(state.zones).map(zone => zone.color);
+      }
+      renderSceneCards();
+      renderDashboard();
+      showToast('Scene updated');
+    }
+
+    function deleteScene(sceneId) {
+      const scene = state.scenes.find(item => item.id === sceneId);
+      if (!scene || !confirm(`Delete scene "${scene.name}"?`)) return;
+      state.scenes = state.scenes.filter(item => item.id !== sceneId);
+      renderSceneCards();
+      renderDashboard();
+      showToast(`Scene "${scene.name}" deleted`, 'info');
     }
 
     function renderZoneCards() {
@@ -1407,11 +1977,11 @@ openrgb_server:
 
       if (state.masterPower) {
         btn.className = 'px-4 py-2 rounded-full bg-indigo-600 hover:bg-indigo-300 text-white text-xs font-semibold flex items-center space-x-2 transition';
-        label.innerText = 'POWER ON';
+        label.innerText = 'Power On';
         showToast('Studio Lights Turned ON');
       } else {
         btn.className = 'px-4 py-2 rounded-full bg-rose-500 hover:bg-rose-600 text-white text-xs font-semibold flex items-center space-x-2 transition';
-        label.innerText = 'POWER OFF';
+        label.innerText = 'Power Off';
         showToast('Studio Lights Turned OFF', 'info');
       }
 
@@ -1513,12 +2083,37 @@ openrgb_server:
       }, 3000);
     }
 
+    function signIn(event) {
+      if (event) event.preventDefault();
+      const email = document.getElementById('login-email').value.trim();
+      if (!email) {
+        document.getElementById('login-error').classList.remove('hidden');
+        return false;
+      }
+
+      const name = email.split('@')[0];
+      document.getElementById('account-name').innerText = name;
+      document.getElementById('account-initials').innerText = name.slice(0, 2).toUpperCase();
+      document.getElementById('login-screen').classList.add('hidden');
+      setActiveTab('dashboard');
+      showToast(`Signed in as ${email}`);
+      return false;
+    }
+
+    function signOut() {
+      document.getElementById('login-screen').classList.remove('hidden');
+      showToast('Signed out', 'info');
+    }
+
     window.onload = function() {
-      init3DStudio();
-      animate3D();
       renderZoneCards();
+      renderSceneCards();
       renderRuleCards();
+      renderDevices();
+      renderDashboard();
+      renderRoomList();
       generateYamlConfig();
+      setActiveTab('dashboard');
     };
   </script>
 </body>
